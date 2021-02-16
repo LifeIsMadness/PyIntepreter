@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace PyInterpreter.InterpreterBody
+namespace PyInterpreter.InterpreterBody.Expressions
 {
     public interface IExpression
     {
