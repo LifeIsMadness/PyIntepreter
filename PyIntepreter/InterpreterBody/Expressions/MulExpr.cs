@@ -6,10 +6,10 @@ namespace PyInterpreter.InterpreterBody.Expressions
 {
     public class MulExpr : IExpression
     {
-        private int _left;
-        private int _right;
+        private IExpression _left;
+        private IExpression _right;
 
-        public MulExpr(int left, int right)
+        public MulExpr(IExpression left, IExpression right)
         {
             _left = left;
             _right = right;
@@ -17,7 +17,7 @@ namespace PyInterpreter.InterpreterBody.Expressions
 
         public int Interpret()
         {
-            return _left * _right;
+            return _left.Interpret() * _right.Interpret();
         }
     }
 }

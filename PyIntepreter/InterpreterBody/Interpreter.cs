@@ -1,4 +1,5 @@
-﻿using System;
+﻿using PyInterpreter.InterpreterBody.Expressions;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -32,14 +33,14 @@ namespace PyInterpreter.InterpreterBody
         /// <summary>
         /// factor: INTEGER | LPARAN expr RPAREN
         /// </summary>
-        private int Factor()
+        private IExpression Factor()
         {
             var token = _currentToken;
-            int result = 0;
+            IExpression result = null;
             if (token.Type == TokenType.INTEGER)
             {
                 eat(TokenType.INTEGER);
-                result = int.Parse(token.Value);
+                result = new NumberExpr(int.Parse(token.Value));
             }
             else if (token.Type == TokenType.OPEN_PARANTHESIS)
             {
@@ -56,7 +57,7 @@ namespace PyInterpreter.InterpreterBody
         /// <summary>
         /// term: factor ((MUL | DIV) factor)*
         /// </summary>
-        private int Term()
+        private IExpression Term()
         {
             TokenType[] operations = { TokenType.MUL, TokenType.DIV };
 
@@ -67,13 +68,16 @@ namespace PyInterpreter.InterpreterBody
                 if (token.Type == TokenType.MUL)
                 {
                     eat(TokenType.MUL);
-                    result *= Factor();
+                    //result *= Factor();
+                    result = new MulExpr(result, Factor());
                 }
                 else if (token.Type == TokenType.DIV)
                 {
                     eat(TokenType.DIV);
-                    result /= Factor();
+                    result = new DivExpr(result, Factor());
+                    //result /= Factor();
                 }
+
             }
 
             return result;
@@ -84,9 +88,9 @@ namespace PyInterpreter.InterpreterBody
         /// Rules:
         /// expr: term ((PLUS | MINUS) term)*
         /// term: factor ((MUL | DIV) factor)*
-        /// factor: INTEGER
+        /// factor: INTEGER | LPARAN expr RPAREN
         /// </summary>
-        public int Expr()
+        public IExpression Expr()
         {
             TokenType[] operations =  { TokenType.PLUS, TokenType.MINUS };
             
@@ -97,12 +101,14 @@ namespace PyInterpreter.InterpreterBody
                 if (token.Type == TokenType.PLUS)
                 {
                     eat(TokenType.PLUS);
-                    result += Term();
+                    //result += Term();
+                    result = new AddExpr(result, Term());
                 }
                 else if (token.Type == TokenType.MINUS)
                 {
                     eat(TokenType.MINUS);
-                    result -= Term();
+                    //result -= Term();
+                    result = new SubExpr(result, Term());
                 }
             }
 

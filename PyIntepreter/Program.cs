@@ -15,7 +15,10 @@ namespace PyInterpreter
 
                     var scanner = new Tokenizer(Console.ReadLine());
                     var interpreter = new Interpreter(scanner);
-                    Console.WriteLine(interpreter.Expr());
+
+                    var tree = interpreter.Expr();
+
+                    Console.WriteLine(tree.Interpret());
                 }
                 catch(Exception ex)
                 {
