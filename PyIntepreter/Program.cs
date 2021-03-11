@@ -14,11 +14,12 @@ namespace PyInterpreter
                     Console.WriteLine("Expression>");
 
                     var scanner = new Tokenizer(Console.ReadLine());
-                    var interpreter = new Interpreter(scanner);
+                    var parser = new Parser(scanner);
+                    var interpreter = new Interpreter(parser);
 
-                    var tree = interpreter.Expr();
+                    var result = interpreter.Interpret();
 
-                    Console.WriteLine(tree.Interpret());
+                    Console.WriteLine(result);
                 }
                 catch(Exception ex)
                 {
