@@ -16,7 +16,7 @@ namespace PyInterpreter.InterpreterBody
 
         public int Interpret()
         {
-            var expr = _parser.Expr();
+            var expr = _parser.Parse();
             return expr.Interpret();
         }
     }

@@ -6,14 +6,22 @@ namespace PyInterpreter.InterpreterBody
 {
     public enum TokenType
     {
+        // Numerical operations
         INTEGER,
         PLUS,
         MINUS,
         MUL,
         DIV,
-        EOF,
         OPEN_PARANTHESIS,
         CLOSE_PARANTHESIS,
+
+        // Keywords
+
+        // Variables
+        ID,
+        ASSIGN,
+        // Others
+        EOF,
 
     }
 

@@ -19,7 +19,7 @@ namespace PyInterpreter.InterpreterBody
             _tokenizer = tokenizer;
             _currentToken = tokenizer.GetNextToken();
         }
-
+        
         private void Error() => throw new Exception("Invalid syntax");
 
         private void eat(TokenType type)
@@ -27,6 +27,15 @@ namespace PyInterpreter.InterpreterBody
             if (type == _currentToken.Type)
                 _currentToken = _tokenizer.GetNextToken();
             else Error();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        private IExpression Variable()
+        {
+            return null;
         }
 
         /// <summary>
@@ -57,6 +66,10 @@ namespace PyInterpreter.InterpreterBody
                 case TokenType.MINUS:
                     eat(TokenType.MINUS);
                     result = new MinusExpr(Factor());
+                    break;
+
+                case TokenType.ID:
+                    result = Variable();
                     break;
 
                 default:
@@ -99,11 +112,20 @@ namespace PyInterpreter.InterpreterBody
         /// <summary>
         /// Arithmetic expression parser.
         /// Rules:
+        /// program: statement_list
+        /// statement_list: statement | statement NEWLINE statement_list
+        /// statement: assignment_statement | empty
+        /// assignment_statement: variable ASSIGN expr
+        /// empty:
         /// expr: term ((PLUS | MINUS) term)*
         /// term: factor ((MUL | DIV) factor)*
-        /// factor: INTEGER | LPARAN expr RPAREN
+        /// factor: (PLUS | MINUS) factor 
+        ///         | INTEGER 
+        ///         | LPARAN expr RPAREN
+        ///         | variable
+        /// variable: ID
         /// </summary>
-        public IExpression Expr()
+        private IExpression Expr()
         {
             TokenType[] operations = { TokenType.PLUS, TokenType.MINUS };
 
@@ -126,6 +148,13 @@ namespace PyInterpreter.InterpreterBody
             }
 
             return result;
+        }
+
+
+
+        public IExpression Parse()
+        {
+            return Expr();
         }
     }
 }
