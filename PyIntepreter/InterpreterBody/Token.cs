@@ -21,6 +21,7 @@ namespace PyInterpreter.InterpreterBody
         ID,
         ASSIGN,
         // Others
+        ENDLINE,
         EOF,
 
     }

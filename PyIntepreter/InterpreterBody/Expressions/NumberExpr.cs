@@ -1,4 +1,5 @@
-﻿using System;
+﻿using PyInterpreter.InterpreterBody.Results;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -6,16 +7,21 @@ namespace PyInterpreter.InterpreterBody.Expressions
 {
     public class NumberExpr : IExpression
     {
-        private int _number;
+        private Token _token;
 
-        public NumberExpr(int number)
+        public NumberExpr(Token token)
         {
-            _number = number;
+            _token = token;
         }
 
-        public int Interpret()
-        {
-            return _number;
+        public IResult Interpret()
+        {         
+            if (_token.Type == TokenType.INTEGER)
+            {
+                return new IntResult(_token.Value);
+            }
+            else
+                return null;
         }
     }
 }

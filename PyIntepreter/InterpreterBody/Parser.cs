@@ -1,4 +1,5 @@
 ﻿using PyInterpreter.InterpreterBody.Expressions;
+using PyInterpreter.InterpreterBody.SymbTable;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,13 +13,17 @@ namespace PyInterpreter.InterpreterBody
 
         private Token _currentToken;
 
+        private SymbTable.SymbolTable _symbolTable;
+
+        public SymbolTable SymbolTable { get => _symbolTable; set => _symbolTable = value; }
+
         // TODO: How to handle if the input will be '3   3';
         // private Token _prevToken;
         public Parser(Tokenizer tokenizer)
         {
             _tokenizer = tokenizer;
             _currentToken = tokenizer.GetNextToken();
-        }
+        }   
         
         private void Error() => throw new Exception("Invalid syntax");
 
@@ -30,12 +35,14 @@ namespace PyInterpreter.InterpreterBody
         }
 
         /// <summary>
-        /// 
+        /// variable: ID
         /// </summary>
         /// <returns></returns>
         private IExpression Variable()
         {
-            return null;
+            IExpression result = new VariableExpr(_currentToken.Value, _symbolTable);
+            eat(TokenType.ID);
+            return result;
         }
 
         /// <summary>
@@ -49,7 +56,7 @@ namespace PyInterpreter.InterpreterBody
             {
                 case TokenType.INTEGER:
                     eat(TokenType.INTEGER);
-                    result = new NumberExpr(int.Parse(token.Value));
+                    result = new NumberExpr(token);
                     break;
 
                 case TokenType.OPEN_PARANTHESIS:
@@ -150,11 +157,78 @@ namespace PyInterpreter.InterpreterBody
             return result;
         }
 
+        /// <summary>
+        /// empty:
+        /// </summary>
+        /// <returns></returns>
 
-
-        public IExpression Parse()
+        private IExpression Empty()
         {
-            return Expr();
+            return new EmptyExpr();
+        }
+
+        /// <summary>
+        /// assignment_statement: variable ASSIGN expr
+        /// </summary>
+        /// <returns></returns>
+        private IExpression AssignmentStatement()
+        {
+            var token = _currentToken;
+            var name = new StringExpression(_currentToken.Value);
+            eat(TokenType.ID);
+            eat(TokenType.ASSIGN);
+            var expr = Expr();
+            return new AssignExpr(name, expr, SymbolTable);
+        }
+
+        /// <summary>
+        /// statement: assignment_statement | empty
+        /// </summary>
+        /// <returns></returns>
+        private IExpression Statement()
+        {
+            IExpression result = null;
+            if (_currentToken.Type == TokenType.ID)
+            {
+                result = AssignmentStatement();
+            }
+            else
+            {
+                result = Empty();    
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// statement_list: statement | statement NEWLINE statement_list
+        /// </summary>
+        /// <returns></returns>
+        private List<IExpression> StatementList()
+        {
+            var result = Statement();
+            List<IExpression> results = new List<IExpression> { result };
+            while (_currentToken.Type == TokenType.ENDLINE)
+            {
+                eat(TokenType.ENDLINE);
+                results.Add(Statement());
+            }
+
+            return results;
+        }
+
+        /// <summary>
+        /// program: statement_list
+        /// </summary>
+        /// <returns></returns>
+        private List<IExpression> Program()
+        {
+            return StatementList();
+        }
+
+        public List<IExpression> Parse()
+        {
+            var program = Program();
+            return program;
         }
     }
 }

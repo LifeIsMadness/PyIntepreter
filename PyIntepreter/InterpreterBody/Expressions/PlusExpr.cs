@@ -1,4 +1,5 @@
-﻿using System;
+﻿using PyInterpreter.InterpreterBody.Results;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -6,16 +7,16 @@ namespace PyInterpreter.InterpreterBody.Expressions
 {
     public class PlusExpr : IExpression
     {
-        private IExpression _right;
+        private readonly IExpression _right;
 
         public PlusExpr(IExpression right)
         {
             _right = right;
         }
 
-        public int Interpret()
+        public IResult Interpret()
         {
-            return + _right.Interpret();
+            return _right.Interpret().Plus();
         }
     }
 }

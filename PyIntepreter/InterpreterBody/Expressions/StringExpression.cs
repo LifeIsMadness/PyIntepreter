@@ -5,18 +5,18 @@ using System.Text;
 
 namespace PyInterpreter.InterpreterBody.Expressions
 {
-    public class MinusExpr : IExpression
+    public class StringExpression: IExpression
     {
-        private readonly IExpression _right;
+        private string _val;
 
-        public MinusExpr(IExpression right)
+        public StringExpression(string val)
         {
-            _right = right;
+            _val = val;
         }
 
         public IResult Interpret()
         {
-            return _right.Interpret().Minus();
+            return new StringResult(_val);
         }
     }
 }

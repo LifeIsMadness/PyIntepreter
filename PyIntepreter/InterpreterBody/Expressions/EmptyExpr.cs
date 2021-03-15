@@ -5,8 +5,11 @@ using System.Text;
 
 namespace PyInterpreter.InterpreterBody.Expressions
 {
-    public interface IExpression
+    public class EmptyExpr : IExpression
     {
-        public IResult Interpret();
+        public IResult Interpret()
+        {
+            return new NoResult();
+        }
     }
 }

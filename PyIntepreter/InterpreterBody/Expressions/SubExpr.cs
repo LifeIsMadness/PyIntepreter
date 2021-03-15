@@ -1,4 +1,5 @@
-﻿using System;
+﻿using PyInterpreter.InterpreterBody.Results;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -15,9 +16,9 @@ namespace PyInterpreter.InterpreterBody.Expressions
             _right = right;
         }
 
-        public int Interpret()
+        public IResult Interpret()
         {
-            return _left.Interpret() - _right.Interpret();
+            return _left.Interpret().Sub(_right.Interpret());
 
         }
     }

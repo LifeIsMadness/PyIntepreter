@@ -1,4 +1,5 @@
 ﻿using PyInterpreter.InterpreterBody.Expressions;
+using PyInterpreter.InterpreterBody.SymbTable;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,15 +10,28 @@ namespace PyInterpreter.InterpreterBody
     public class Interpreter
     {
         private readonly Parser _parser;
+
+        private SymbTable.SymbolTable _symbolTable;
+
+        public SymbolTable SymbolTable { get => _symbolTable; }
+
         public Interpreter(Parser parser)
         {
             _parser = parser;
+            _symbolTable = new SymbolTable();
+            parser.SymbolTable = _symbolTable;
         }
 
-        public int Interpret()
+        public dynamic Interpret()
         {
             var expr = _parser.Parse();
-            return expr.Interpret();
+            //var result = expr.Interpret();
+            foreach (var node in expr)
+            {
+                node.Interpret();
+            }
+            return null;
+            // return result.GetValue();
         }
     }
 }
