@@ -17,15 +17,16 @@ namespace PyInterpreter.InterpreterBody.Expressions
             _vars = vars;
         }
 
-        public IResult Interpret()
+        public void Accept(ExpressionVisitor expressionVisitor)
         {
-            var variable = _vars.GetVariable(_name);
-
-            var res =  new VariableResult();
-            res.SetValue(variable.Value);
-            return res;
+            expressionVisitor.VisitVariableExpr(this);
         }
 
-
+        public IResult Eval()
+        {
+            // TODO: change VariableResult to only return name
+            // (its possible to return StringResult).
+            return new VariableResult(_name);
+        }
     }
 }

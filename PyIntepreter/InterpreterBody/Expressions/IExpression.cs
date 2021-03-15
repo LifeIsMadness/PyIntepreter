@@ -7,6 +7,6 @@ namespace PyInterpreter.InterpreterBody.Expressions
 {
     public interface IExpression
     {
-        public IResult Interpret();
+        void Accept(ExpressionVisitor expressionVisitor);
     }
 }

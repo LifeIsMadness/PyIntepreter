@@ -18,7 +18,6 @@ namespace PyInterpreter.InterpreterBody
         public SymbolTable SymbolTable { get => _symbolTable; set => _symbolTable = value; }
 
         // TODO: How to handle if the input will be '3   3';
-        // private Token _prevToken;
         public Parser(Tokenizer tokenizer)
         {
             _tokenizer = tokenizer;
@@ -37,7 +36,6 @@ namespace PyInterpreter.InterpreterBody
         /// <summary>
         /// variable: ID
         /// </summary>
-        /// <returns></returns>
         private IExpression Variable()
         {
             IExpression result = new VariableExpr(_currentToken.Value, _symbolTable);
@@ -46,7 +44,12 @@ namespace PyInterpreter.InterpreterBody
         }
 
         /// <summary>
-        /// factor: (PLUS | MINUS) factor | INTEGER | LPARAN expr RPAREN
+        /// factor: PLUS factor
+        ///         | MINUS factor 
+        ///         | INTEGER_LITERAL 
+        ///         | FLOAT_LITERAL
+        ///         | LPARAN expr RPAREN
+        ///         | variable
         /// </summary>
         private IExpression Factor()
         {
@@ -54,8 +57,13 @@ namespace PyInterpreter.InterpreterBody
             IExpression result = null;
             switch(token.Type)
             {
-                case TokenType.INTEGER:
-                    eat(TokenType.INTEGER);
+                case TokenType.INTEGER_LITERAL:
+                    eat(TokenType.INTEGER_LITERAL);
+                    result = new NumberExpr(token);
+                    break;
+
+                case TokenType.FLOAT_LITERAL:
+                    eat(TokenType.FLOAT_LITERAL);
                     result = new NumberExpr(token);
                     break;
 
@@ -170,12 +178,10 @@ namespace PyInterpreter.InterpreterBody
         /// <summary>
         /// assignment_statement: variable ASSIGN expr
         /// </summary>
-        /// <returns></returns>
         private IExpression AssignmentStatement()
         {
             var token = _currentToken;
-            var name = new StringExpression(_currentToken.Value);
-            eat(TokenType.ID);
+            var name = Variable();
             eat(TokenType.ASSIGN);
             var expr = Expr();
             return new AssignExpr(name, expr, SymbolTable);
@@ -184,7 +190,6 @@ namespace PyInterpreter.InterpreterBody
         /// <summary>
         /// statement: assignment_statement | empty
         /// </summary>
-        /// <returns></returns>
         private IExpression Statement()
         {
             IExpression result = null;
@@ -202,7 +207,6 @@ namespace PyInterpreter.InterpreterBody
         /// <summary>
         /// statement_list: statement | statement NEWLINE statement_list
         /// </summary>
-        /// <returns></returns>
         private List<IExpression> StatementList()
         {
             var result = Statement();
@@ -219,15 +223,15 @@ namespace PyInterpreter.InterpreterBody
         /// <summary>
         /// program: statement_list
         /// </summary>
-        /// <returns></returns>
-        private List<IExpression> Program()
+        private IExpression Program()
         {
-            return StatementList();
+            return new ProgramExpr(StatementList());
         }
 
-        public List<IExpression> Parse()
+        public IExpression Parse()
         {
             var program = Program();
+            _tokenizer.PrintLexems();
             return program;
         }
     }

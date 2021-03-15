@@ -7,16 +7,21 @@ namespace PyInterpreter.InterpreterBody.Expressions
 {
     public class MinusExpr : IExpression
     {
-        private readonly IExpression _right;
+        public readonly IExpression _right;
 
         public MinusExpr(IExpression right)
         {
             _right = right;
         }
 
-        public IResult Interpret()
+        public void Accept(ExpressionVisitor expressionVisitor)
         {
-            return _right.Interpret().Minus();
+            expressionVisitor.VisitMinusExpr(this);
+        }
+
+        public IResult Eval(IResult right)
+        {
+            return right.Minus();
         }
     }
 }

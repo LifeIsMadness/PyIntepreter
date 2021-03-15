@@ -5,18 +5,107 @@ using System.Text.RegularExpressions;
 
 namespace PyInterpreter.InterpreterBody
 {
+    class LexemTable
+    {
+        public Dictionary<string, string> KeyWords { get; set; } =
+            new Dictionary<string, string>();
+
+        public Dictionary<string, string> Operators { get; set; } =
+            new Dictionary<string, string>();
+
+        public Dictionary<string, string> Literals { get; set; } =
+            new Dictionary<string, string>();
+
+        public void AddLiteral(Token token)
+        {
+            switch (token.Type)
+            {
+                case TokenType.INTEGER_LITERAL:
+                    Literals.TryAdd(token.Value, "literal of \"int\" type");
+                    break;
+
+                case TokenType.FLOAT_LITERAL:
+                    Literals.TryAdd(token.Value, "literal of \"float\" type");
+                    break;
+            }
+        }
+
+        public void AddKeyword(Token token)
+        {
+
+        }
+
+        public void AddOperator(Token token)
+        {
+            switch (token.Type)
+            {
+                case TokenType.PLUS:
+                case TokenType.MINUS:
+                case TokenType.MUL:
+                case TokenType.DIV:
+                case TokenType.OPEN_PARANTHESIS:
+                case TokenType.CLOSE_PARANTHESIS:
+                case TokenType.ASSIGN:
+                    Operators.TryAdd(token.Value, "arithmetic operator");
+                    break;
+            }
+        }
+
+        private void PrintRow(KeyValuePair<string, string> row)
+        {
+            Console.WriteLine($"{row.Key}\t|{row.Value, -30}|");
+        }
+
+        public void ShowTables()
+        {
+            var border = "---------------------------------------";
+            Console.WriteLine(border);
+            Console.WriteLine("|\tLiterals\t\t       |");
+            Console.WriteLine(border);
+            foreach (var row in Literals)
+            {
+                PrintRow(row);
+            }
+            Console.WriteLine(border);
+
+            Console.WriteLine(border);
+            Console.WriteLine("|\tOperators\t\t       |");
+            Console.WriteLine(border);
+            foreach (var row in Operators)
+            {
+                PrintRow(row);
+            }
+            Console.WriteLine(border);
+
+            Console.WriteLine(border);
+            Console.WriteLine("|\tKeywords\t\t       |");
+            Console.WriteLine(border);
+            foreach (var row in KeyWords)
+            {
+                PrintRow(row);
+            }
+            Console.WriteLine(border);
+        }
+
+    }
+
     /// <summary>
     /// Tokenizer or scanner does lexical analysis of text,
     /// then generates a stream of tokens.
     /// </summary>
     public class Tokenizer
     {
-
         private readonly string _text;
 
         private int _pos = 0;
 
+        private int _linePos = 0;
+
+        private int _lineNumber = 0;
+
         private char _currentChar;
+
+        private LexemTable _lexemTable = new LexemTable();
 
         public Tokenizer(string text)
         {
@@ -24,7 +113,12 @@ namespace PyInterpreter.InterpreterBody
             _currentChar = _text[_pos];
         }
 
-        private void Error() => throw new Exception("Invalid character");
+        public void PrintLexems()
+        {
+            _lexemTable.ShowTables();
+        }
+
+        private void Error() => throw new Exception($"Invalid character '{_currentChar}' at line: {_lineNumber} pos: {_linePos}");
 
         private bool IsEOF() => _pos > _text.Length - 1;
 
@@ -53,16 +147,33 @@ namespace PyInterpreter.InterpreterBody
             }
         }
 
-        private string GetInteger()
+        private void SetDigitResult(StringBuilder res)
         {
-            string result = string.Empty;
             while (!IsEOF() && char.IsDigit(_currentChar))
             {
-                result += _currentChar;
+                res.Append(_currentChar);
                 Move();
             }
+        }
 
-            return result;
+        private Token GetNumber()
+        {
+            StringBuilder result = new StringBuilder();
+            Token token = null;
+
+            SetDigitResult(result);
+
+            if (_currentChar == '.')
+            {
+                result.Append(_currentChar);
+                SetDigitResult(result);
+                token = new Token(TokenType.FLOAT_LITERAL, result.ToString());
+            }
+            else
+                token = new Token(TokenType.INTEGER_LITERAL, result.ToString());
+
+            _lexemTable.AddLiteral(token);
+            return token;
         }
 
         private Token GetKeywordOrVariable()
@@ -75,6 +186,7 @@ namespace PyInterpreter.InterpreterBody
             }
 
             var token = new Token(Keywords.GetKeyword(value), value);
+            _lexemTable.AddKeyword(token);
             return token;
         }
 
@@ -101,42 +213,54 @@ namespace PyInterpreter.InterpreterBody
                 }
 
                 if (char.IsDigit(_currentChar))
-                    return new Token(TokenType.INTEGER, GetInteger());
+                    return GetNumber();
 
                 if (_currentChar == '+')
                 {
                     Move();
-                    return new Token(TokenType.PLUS, "+");
+                    var token = new Token(TokenType.PLUS, "+");
+                    _lexemTable.AddOperator(token);
+                    return token;
                 }
 
                 if (_currentChar == '-')
                 {
                     Move();
-                    return new Token(TokenType.MINUS, "-");
+                    var token = new Token(TokenType.MINUS, "-");
+                    _lexemTable.AddOperator(token);
+                    return token;
                 }
 
                 if (_currentChar == '*')
                 {
                     Move();
-                    return new Token(TokenType.MUL, "*");
+                    var token = new Token(TokenType.MUL, "*");
+                    _lexemTable.AddOperator(token);
+                    return token;
                 }
 
                 if (_currentChar == '/')
                 {
                     Move();
-                    return new Token(TokenType.DIV, "/");
+                    var token = new Token(TokenType.DIV, "/");
+                    _lexemTable.AddOperator(token);
+                    return token;
                 }
 
                 if (_currentChar == '(')
                 {
                     Move();
-                    return new Token(TokenType.OPEN_PARANTHESIS, "(");
+                    var token = new Token(TokenType.OPEN_PARANTHESIS, "(");
+                    _lexemTable.AddOperator(token);
+                    return token;
                 }
 
                 if (_currentChar == ')')
                 {
                     Move();
-                    return new Token(TokenType.CLOSE_PARANTHESIS, ")");
+                    var token = new Token(TokenType.CLOSE_PARANTHESIS, ")");
+                    _lexemTable.AddOperator(token);
+                    return token;
                 }
 
                 if (char.IsLetter(_currentChar))
@@ -145,7 +269,9 @@ namespace PyInterpreter.InterpreterBody
                 if (_currentChar == '=' && IsAssignment())
                 {
                     Move();
-                    return new Token(TokenType.ASSIGN, "=");
+                    var token = new Token(TokenType.ASSIGN, "=");
+                    _lexemTable.AddOperator(token);
+                    return token;
                 }
 
                 Error();

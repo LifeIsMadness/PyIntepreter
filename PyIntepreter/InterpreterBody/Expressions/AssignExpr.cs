@@ -8,7 +8,7 @@ namespace PyInterpreter.InterpreterBody.Expressions
 {
     public class AssignExpr : IExpression
     {
-        private IExpression _left, _right;
+        public IExpression _left, _right;
         private SymbolTable _vars;
 
         public AssignExpr(IExpression left, IExpression right, SymbolTable symbolTable)
@@ -18,17 +18,13 @@ namespace PyInterpreter.InterpreterBody.Expressions
             _vars = symbolTable;
         }
 
-        public IResult Interpret()
+        public void Accept(ExpressionVisitor expressionVisitor)
         {
-            var name = _left.Interpret().GetValue();
-            var expr = _right.Interpret().GetValue();
-            var variable = new Variable
-            {
-                Name = name,
-                Type = expr.GetType().Name,
-                Value = expr,
-            };
-            _vars.SetVariable(name, variable);
+            expressionVisitor.VisitAssignExpr(this);
+        }
+
+        public IResult Eval(string name, IResult expr)
+        {
             return new NoResult();
         }
     }

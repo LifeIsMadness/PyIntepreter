@@ -9,10 +9,13 @@ namespace PyInterpreter
     {
         static void PrintTable(SymbolTable table)
         {
-            Console.WriteLine("Name\tType");
+            Console.WriteLine("Variables");
+            Console.WriteLine("Name\tType\tValue");
             foreach (var pair in table.Dict)
             {
-                Console.WriteLine($"{pair.Key}\t{pair.Value.Type}");
+                Console.WriteLine($"{pair.Key}" +
+                    $"\t{pair.Value.Type}" +
+                    $"\t{pair.Value.Value.GetValue()}");
             }
         }
 
@@ -40,8 +43,8 @@ namespace PyInterpreter
 
             try
             {
-                string text = "a = 1\n b = a * 10\n";
-
+                string text = "\ta = 1\n\tb = a * (20)\n";
+                Console.WriteLine($"Program: \n{text}");
                 var scanner = new Tokenizer(text);
                 var parser = new Parser(scanner);
                 var interpreter = new Interpreter(parser);

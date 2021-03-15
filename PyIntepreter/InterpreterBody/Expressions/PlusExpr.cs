@@ -7,16 +7,21 @@ namespace PyInterpreter.InterpreterBody.Expressions
 {
     public class PlusExpr : IExpression
     {
-        private readonly IExpression _right;
+        public readonly IExpression _right;
 
         public PlusExpr(IExpression right)
         {
             _right = right;
         }
 
-        public IResult Interpret()
+        public void Accept(ExpressionVisitor expressionVisitor)
         {
-            return _right.Interpret().Plus();
+            expressionVisitor.VisitPlusExpr(this);
+        }
+
+        public IResult Eval(IResult right)
+        {
+            return right.Plus();
         }
     }
 }

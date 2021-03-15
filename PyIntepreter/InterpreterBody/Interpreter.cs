@@ -7,18 +7,13 @@ using System.Text;
 
 namespace PyInterpreter.InterpreterBody
 {
-    public class Interpreter
+    public class Interpreter: ExpressionVisitor
     {
         private readonly Parser _parser;
 
-        private SymbTable.SymbolTable _symbolTable;
-
-        public SymbolTable SymbolTable { get => _symbolTable; }
-
-        public Interpreter(Parser parser)
+        public Interpreter(Parser parser): base()
         {
             _parser = parser;
-            _symbolTable = new SymbolTable();
             parser.SymbolTable = _symbolTable;
         }
 
@@ -26,10 +21,7 @@ namespace PyInterpreter.InterpreterBody
         {
             var expr = _parser.Parse();
             //var result = expr.Interpret();
-            foreach (var node in expr)
-            {
-                node.Interpret();
-            }
+            expr.Accept(this);
             return null;
             // return result.GetValue();
         }

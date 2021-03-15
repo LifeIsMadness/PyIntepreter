@@ -7,8 +7,8 @@ namespace PyInterpreter.InterpreterBody.Expressions
 {
     public class AddExpr : IExpression
     {
-        private IExpression _left;
-        private IExpression _right;
+        public IExpression _left;
+        public IExpression _right;
 
         public AddExpr(IExpression left, IExpression right)
         {
@@ -16,9 +16,14 @@ namespace PyInterpreter.InterpreterBody.Expressions
             _right = right;
         }
 
-        public IResult Interpret()
+        public void Accept(ExpressionVisitor visitor)
         {
-            return _left.Interpret().Add(_right.Interpret());
+            visitor.VisitAddExpr(this);
+        }
+
+        public IResult Eval(IResult left, IResult right)
+        {
+            return left.Add(right);
         }
     }
 }

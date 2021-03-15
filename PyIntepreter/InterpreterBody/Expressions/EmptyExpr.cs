@@ -7,7 +7,12 @@ namespace PyInterpreter.InterpreterBody.Expressions
 {
     public class EmptyExpr : IExpression
     {
-        public IResult Interpret()
+        public void Accept(ExpressionVisitor expressionVisitor)
+        {
+            expressionVisitor.VisitEmptyExpr(this); 
+        }
+
+        public IResult Eval()
         {
             return new NoResult();
         }

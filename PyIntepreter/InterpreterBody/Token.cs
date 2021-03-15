@@ -6,8 +6,10 @@ namespace PyInterpreter.InterpreterBody
 {
     public enum TokenType
     {
+        // types
+        INTEGER_LITERAL,
+        FLOAT_LITERAL,
         // Numerical operations
-        INTEGER,
         PLUS,
         MINUS,
         MUL,

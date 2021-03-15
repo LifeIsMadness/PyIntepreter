@@ -14,14 +14,19 @@ namespace PyInterpreter.InterpreterBody.Expressions
             _token = token;
         }
 
-        public IResult Interpret()
-        {         
-            if (_token.Type == TokenType.INTEGER)
+        public void Accept(ExpressionVisitor visitor)
+        {
+            visitor.VisitNumberExpr(this);
+        }
+
+        public IResult Eval()
+        {
+            if (_token.Type == TokenType.INTEGER_LITERAL)
             {
                 return new IntResult(_token.Value);
             }
             else
-                return null;
+                return new FloatResult(_token.Value);      
         }
     }
 }

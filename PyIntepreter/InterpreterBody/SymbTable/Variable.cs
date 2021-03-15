@@ -1,4 +1,5 @@
-﻿using System;
+﻿using PyInterpreter.InterpreterBody.Results;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -10,6 +11,6 @@ namespace PyInterpreter.InterpreterBody.SymbTable
 
         public string Type { get; set; }
 
-        public dynamic Value { get; set; }
+        public IResult Value { get; set; }
     }
 }

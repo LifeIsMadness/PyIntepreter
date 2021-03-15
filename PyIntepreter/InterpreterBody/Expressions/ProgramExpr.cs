@@ -5,18 +5,18 @@ using System.Text;
 
 namespace PyInterpreter.InterpreterBody.Expressions
 {
-    public class StringExpression: IExpression
+    public class ProgramExpr : IExpression
     {
-        private string _val;
+        public readonly IList<IExpression> nodes;
 
-        public StringExpression(string val)
+        public ProgramExpr(IList<IExpression> nodes)
         {
-            _val = val;
+            this.nodes = nodes;
         }
 
         public void Accept(ExpressionVisitor expressionVisitor)
         {
-            throw new NotImplementedException();
+            expressionVisitor.VisitProgramExpr(this);
         }
     }
 }

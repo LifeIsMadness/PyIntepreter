@@ -7,8 +7,8 @@ namespace PyInterpreter.InterpreterBody.Expressions
 {
     public class SubExpr : IExpression
     {
-        private IExpression _left;
-        private IExpression _right;
+        public IExpression _left;
+        public IExpression _right;
 
         public SubExpr(IExpression left, IExpression right)
         {
@@ -16,10 +16,14 @@ namespace PyInterpreter.InterpreterBody.Expressions
             _right = right;
         }
 
-        public IResult Interpret()
+        public void Accept(ExpressionVisitor visitor)
         {
-            return _left.Interpret().Sub(_right.Interpret());
+            visitor.VisitSubExpr(this);
+        }
 
+        public IResult Eval(IResult left, IResult right)
+        {
+            return left.Sub(right);
         }
     }
 }
