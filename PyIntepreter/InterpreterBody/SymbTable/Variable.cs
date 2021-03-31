@@ -7,10 +7,28 @@ namespace PyInterpreter.InterpreterBody.SymbTable
 {
     public class Variable
     {
-        public string Name { get; set; }
+        public string Name { get; }
 
-        public string Type { get; set; }
+        public string Type { get; }
 
-        public IResult Value { get; set; }
+        public IResult Value { get; }
+
+        public Variable(string name, IResult value)
+        {
+            Name = name;
+            Value = value;
+            if (Value.GetType() == typeof(IntResult))
+            {
+                Type = "int";
+            }
+            else if (Value.GetType() == typeof(FloatResult))
+            {
+                Type = "float";
+            }
+            else
+            {
+                Type = "list";   
+            }
+        }
     }
 }

@@ -9,9 +9,10 @@ namespace PyInterpreter.InterpreterBody.Results
     /// </summary>
     public interface IResult
     {
-        public dynamic GetValue();
+        //public dynamic GetValue();
 
-        public void SetValue(dynamic val);
+        //public void SetValue(dynamic val);
+        public dynamic Value { get; set; }
 
         public IResult Plus();
 

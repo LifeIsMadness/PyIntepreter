@@ -8,6 +8,7 @@ namespace PyInterpreter.InterpreterBody.Expressions
     public class AddExpr : IExpression
     {
         public IExpression _left;
+
         public IExpression _right;
 
         public AddExpr(IExpression left, IExpression right)

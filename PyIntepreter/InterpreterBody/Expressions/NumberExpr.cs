@@ -23,10 +23,10 @@ namespace PyInterpreter.InterpreterBody.Expressions
         {
             if (_token.Type == TokenType.INTEGER_LITERAL)
             {
-                return new IntResult(_token.Value);
+                return new IntResult(int.Parse(_token.Value));
             }
             else
-                return new FloatResult(_token.Value);      
+                return new FloatResult(double.Parse(_token.Value));      
         }
     }
 }

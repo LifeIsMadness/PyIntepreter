@@ -24,13 +24,66 @@ namespace PyInterpreter.InterpreterBody
             _currentToken = tokenizer.GetNextToken();
         }   
         
-        private void Error() => throw new Exception("Invalid syntax");
+        private void Error() => throw new Exception($"Invalid syntax at line: " +
+            $"{_tokenizer.LineNumber + 1} pos: {_tokenizer.LinePos + 1}");
 
-        private void eat(TokenType type)
+        private void Error(string msg) => throw new Exception($"{msg} at line: " +
+            $"{_tokenizer.LineNumber + 1} pos: {_tokenizer.LinePos + 1}");
+
+        private void Eat(TokenType type)
         {
             if (type == _currentToken.Type)
                 _currentToken = _tokenizer.GetNextToken();
             else Error();
+        }
+
+        private IExpression @Index()
+        {
+            switch (_currentToken.Type)
+            {
+                case TokenType.PLUS:
+                    Eat(TokenType.PLUS);
+                    return new PlusExpr(Index());
+
+                case TokenType.MINUS:
+                    Eat(TokenType.MINUS);
+                    return new MinusExpr(Index());
+            }
+
+            var result = Factor();
+            while (_currentToken.Type == TokenType.OPEN_BRACKETS)
+            {
+                Eat(TokenType.OPEN_BRACKETS);
+                result = new IndexExpr(result, Expr());
+                Eat(TokenType.CLOSE_BRACKETS);
+
+                //if (_currentToken.Type != TokenType.OPEN_BRACKETS)
+                //    break;
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// list: LBRACKET (expr COMMA)* RBRACKET
+        /// </summary>
+        private IExpression @List()
+        {
+            Eat(TokenType.OPEN_BRACKETS);
+            List<IExpression> items = new List<IExpression>();
+
+            // empty list
+            if (_currentToken.Type != TokenType.CLOSE_BRACKETS)
+            {
+                items.Add(Expr());
+                while (_currentToken.Type == TokenType.COMMA)
+                {
+                    Eat(TokenType.COMMA);
+                    items.Add(Expr());
+                }
+            }
+
+            Eat(TokenType.CLOSE_BRACKETS);
+            return new ListExpr(items);
         }
 
         /// <summary>
@@ -38,18 +91,17 @@ namespace PyInterpreter.InterpreterBody
         /// </summary>
         private IExpression Variable()
         {
-            IExpression result = new VariableExpr(_currentToken.Value, _symbolTable);
-            eat(TokenType.ID);
+            IExpression result = new VariableExpr(_currentToken.Value);
+            Eat(TokenType.ID);
             return result;
         }
 
         /// <summary>
-        /// factor: PLUS factor
-        ///         | MINUS factor 
-        ///         | INTEGER_LITERAL 
+        /// factor: INTEGER_LITERAL
         ///         | FLOAT_LITERAL
-        ///         | LPARAN expr RPAREN
+        ///         | LPAREN expr RPAREN
         ///         | variable
+        ///         | list
         /// </summary>
         private IExpression Factor()
         {
@@ -58,40 +110,45 @@ namespace PyInterpreter.InterpreterBody
             switch(token.Type)
             {
                 case TokenType.INTEGER_LITERAL:
-                    eat(TokenType.INTEGER_LITERAL);
+                    Eat(TokenType.INTEGER_LITERAL);
                     result = new NumberExpr(token);
                     break;
 
                 case TokenType.FLOAT_LITERAL:
-                    eat(TokenType.FLOAT_LITERAL);
+                    Eat(TokenType.FLOAT_LITERAL);
                     result = new NumberExpr(token);
                     break;
 
                 case TokenType.OPEN_PARANTHESIS:
-                    eat(TokenType.OPEN_PARANTHESIS);
+                    Eat(TokenType.OPEN_PARANTHESIS);
                     result = Expr();
-                    eat(TokenType.CLOSE_PARANTHESIS);
+                    Eat(TokenType.CLOSE_PARANTHESIS);
                     break;
 
-                case TokenType.PLUS:
-                    eat(TokenType.PLUS);
-                    result = new PlusExpr(Factor());
-                    break;
+                //case TokenType.PLUS:
+                //    Eat(TokenType.PLUS);
+                //    result = new PlusExpr(Factor());
+                //    break;
 
-                case TokenType.MINUS:
-                    eat(TokenType.MINUS);
-                    result = new MinusExpr(Factor());
-                    break;
+                //case TokenType.MINUS:
+                //    Eat(TokenType.MINUS);
+                //    result = new MinusExpr(Factor());
+                //    break;
 
                 case TokenType.ID:
                     result = Variable();
+
+                    break;
+
+                case TokenType.OPEN_BRACKETS:
+                    result = List();
+      
                     break;
 
                 default:
                     Error();
                     break;
             }
-
             return result;
         }
 
@@ -102,19 +159,19 @@ namespace PyInterpreter.InterpreterBody
         {
             TokenType[] operations = { TokenType.MUL, TokenType.DIV };
 
-            var result = Factor();
+            var result = Index();
             while (operations.Contains(_currentToken.Type))
             {
                 var token = _currentToken;
                 if (token.Type == TokenType.MUL)
                 {
-                    eat(TokenType.MUL);
+                    Eat(TokenType.MUL);
                     //result *= Factor();
                     result = new MulExpr(result, Factor());
                 }
                 else if (token.Type == TokenType.DIV)
                 {
-                    eat(TokenType.DIV);
+                    Eat(TokenType.DIV);
                     result = new DivExpr(result, Factor());
                     //result /= Factor();
                 }
@@ -133,12 +190,17 @@ namespace PyInterpreter.InterpreterBody
         /// assignment_statement: variable ASSIGN expr
         /// empty:
         /// expr: term ((PLUS | MINUS) term)*
-        /// term: factor ((MUL | DIV) factor)*
-        /// factor: (PLUS | MINUS) factor 
-        ///         | INTEGER 
-        ///         | LPARAN expr RPAREN
+        /// term: index ((MUL | DIV) index)*
+        /// index: PLUS index
+        ///        | MINUS index
+        ///        | factor (LBRACKET expr RBRACKET)*
+        /// factor: INTEGER_LITERAL
+        ///         | FLOAT_LITERAL
+        ///         | LPAREN expr RPAREN
         ///         | variable
+        ///         | list
         /// variable: ID
+        /// list: LBRACKET (expr COMMA)* RBRACKET
         /// </summary>
         private IExpression Expr()
         {
@@ -150,13 +212,13 @@ namespace PyInterpreter.InterpreterBody
                 var token = _currentToken;
                 if (token.Type == TokenType.PLUS)
                 {
-                    eat(TokenType.PLUS);
+                    Eat(TokenType.PLUS);
                     //result += Term();
                     result = new AddExpr(result, Term());
                 }
                 else if (token.Type == TokenType.MINUS)
                 {
-                    eat(TokenType.MINUS);
+                    Eat(TokenType.MINUS);
                     //result -= Term();
                     result = new SubExpr(result, Term());
                 }
@@ -182,7 +244,7 @@ namespace PyInterpreter.InterpreterBody
         {
             var token = _currentToken;
             var name = Variable();
-            eat(TokenType.ASSIGN);
+            Eat(TokenType.ASSIGN);
             var expr = Expr();
             return new AssignExpr(name, expr, SymbolTable);
         }
@@ -197,10 +259,13 @@ namespace PyInterpreter.InterpreterBody
             {
                 result = AssignmentStatement();
             }
-            else
+            else if (_currentToken.Type == TokenType.EOF
+                     || _currentToken.Type == TokenType.ENDLINE)
             {
-                result = Empty();    
+                result = Empty();
             }
+            else Error("Expected statement(assign, blank line)");
+
             return result;
         }
 
@@ -211,10 +276,17 @@ namespace PyInterpreter.InterpreterBody
         {
             var result = Statement();
             List<IExpression> results = new List<IExpression> { result };
+            // TODO: syntax checking
             while (_currentToken.Type == TokenType.ENDLINE)
             {
-                eat(TokenType.ENDLINE);
+                Eat(TokenType.ENDLINE);
+                // TODO: u can exit here if EOF 
                 results.Add(Statement());
+            }
+
+            if (_currentToken.Type != TokenType.EOF)
+            {
+                Error("Expected operator");
             }
 
             return results;

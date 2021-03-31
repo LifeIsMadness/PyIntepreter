@@ -9,12 +9,10 @@ namespace PyInterpreter.InterpreterBody.Expressions
     public class VariableExpr: IExpression
     {
         private string _name;
-        private SymbolTable _vars;
 
-        public VariableExpr(string name, SymbolTable vars)
+        public VariableExpr(string name)
         {
             _name = name;
-            _vars = vars;
         }
 
         public void Accept(ExpressionVisitor expressionVisitor)

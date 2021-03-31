@@ -7,76 +7,83 @@ namespace PyInterpreter.InterpreterBody.Results
     public class Result: IResult
     {
         // python lexem;
-        protected string _rawValue = string.Empty;
+        //protected string _rawValue = string.Empty;
 
-        protected dynamic _value;
+        //protected dynamic _value;
+
+        public dynamic Value { get; set; }
 
         public Result() { }
 
-        public Result(string value)
-        {
-            _rawValue = value;
-            ParseRawValue();
-        }
-        protected virtual void ParseRawValue()
-        {
-            _value = _rawValue;
-        } 
+        public Result(dynamic value) => Value = value;
 
-        public virtual dynamic GetValue() => _value;
+        //public Result(string value)
+        //{
+        //    _rawValue = value;
+        //    ParseRawValue();
+        //}
+        //protected virtual void ParseRawValue()
+        //{
+        //    _value = _rawValue;
+        //} 
 
-        public virtual void SetValue(dynamic val)
-        {
-            _value = val;
-        }
+        //public virtual dynamic GetValue() => _value;
+
+        //public virtual void SetValue(dynamic val)
+        //{
+        //    _value = val;
+        //}
 
         public virtual IResult Minus()
         {
-            SetValue(-_value);
-            return this;
+            //SetValue(-_value);
+            throw new NotImplementedException();
         }
 
         public virtual IResult Plus()
         {
-            SetValue(+_value);
-            return this;
+            //SetValue(+_value);
+            throw new NotImplementedException();
         }
 
         public virtual IResult Add(IResult right)
         {
-            var res = GetValue() + right.GetValue();
-            var newRes = new Result();
+            //var res = GetValue() + right.GetValue();
+            //var newRes = new Result();
 
-            newRes.SetValue(res);
-            return newRes;
+            //newRes.SetValue(res);
+            //return newRes;
+            throw new NotImplementedException();
         }
 
         public virtual IResult Sub(IResult right)
         {
-            var res = GetValue() - right.GetValue();
-            var newRes = new Result();
+            //var res = GetValue() - right.GetValue();
+            //var newRes = new Result();
 
-            newRes.SetValue(res);
-            return newRes;
+            //newRes.SetValue(res);
+            //return newRes;
+            throw new NotImplementedException();
         }
 
         public virtual IResult Mul(IResult right)
         {
-            var res = GetValue() * right.GetValue();
-            var newRes = new Result();
+            //var res = GetValue() * right.GetValue();
+            //var newRes = new Result();
 
-            newRes.SetValue(_value);
-            return newRes;
+            //newRes.SetValue(_value);
+            //return newRes;
+            throw new NotImplementedException();
         }
 
         public virtual IResult Div(IResult right)
         {
-            var res = GetValue() / (double)right.GetValue();
-            var newRes = new Result();
+            //var res = GetValue() / (double)right.GetValue();
+            //var newRes = new Result();
 
-            newRes.SetValue(_value);
-            return newRes;
+            //newRes.SetValue(_value);
+            //return newRes;
+            throw new NotImplementedException();
         }
-
     }
 }

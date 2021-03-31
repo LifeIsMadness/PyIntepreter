@@ -2,20 +2,22 @@
 using PyInterpreter.InterpreterBody.SymbTable;
 using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace PyInterpreter
 {
     class Program
-    {
+    {   
         static void PrintTable(SymbolTable table)
         {
+            
             Console.WriteLine("Variables");
             Console.WriteLine("Name\tType\tValue");
             foreach (var pair in table.Dict)
             {
                 Console.WriteLine($"{pair.Key}" +
                     $"\t{pair.Value.Type}" +
-                    $"\t{pair.Value.Value.GetValue()}");
+                    $"\t{pair.Value.Value.Value}");
             }
         }
 
@@ -40,11 +42,15 @@ namespace PyInterpreter
             //        Console.WriteLine(ex.Message);
             //    }
             //}
+            
+            string fileName = "input.txt";
+           // string text = File.ReadAllText(fileName);
 
             try
             {
-                string text = "\ta = 1\n\tb = a * (20)\n";
-                Console.WriteLine($"Program: \n{text}");
+                string text = "a = 1+[1,2,3][1]";
+                Console.WriteLine($"Program text: \n{text}");
+                Console.WriteLine("-----------------------");
                 var scanner = new Tokenizer(text);
                 var parser = new Parser(scanner);
                 var interpreter = new Interpreter(parser);

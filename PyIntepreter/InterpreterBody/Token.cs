@@ -22,7 +22,12 @@ namespace PyInterpreter.InterpreterBody
         // Variables
         ID,
         ASSIGN,
+        // Collections
+        OPEN_BRACKETS,
+        CLOSE_BRACKETS,
+        LIST,
         // Others
+        COMMA,
         ENDLINE,
         EOF,
 

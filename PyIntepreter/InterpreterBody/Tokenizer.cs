@@ -53,7 +53,7 @@ namespace PyInterpreter.InterpreterBody
 
         private void PrintRow(KeyValuePair<string, string> row)
         {
-            Console.WriteLine($"{row.Key}\t|{row.Value, -30}|");
+            Console.WriteLine($" {row.Key}\t|{row.Value, -30}|");
         }
 
         public void ShowTables()
@@ -107,6 +107,9 @@ namespace PyInterpreter.InterpreterBody
 
         private LexemTable _lexemTable = new LexemTable();
 
+        public int LinePos { get => _linePos; }
+        public int LineNumber { get => _lineNumber; }
+
         public Tokenizer(string text)
         {
             _text = text;
@@ -118,7 +121,15 @@ namespace PyInterpreter.InterpreterBody
             _lexemTable.ShowTables();
         }
 
-        private void Error() => throw new Exception($"Invalid character '{_currentChar}' at line: {_lineNumber} pos: {_linePos}");
+        private void Error()
+        {
+            throw new Exception($"Invalid character '{_currentChar}' at line: {++_lineNumber} pos: {++_linePos}");
+        }
+
+        private void Error(string msg)
+        {
+            throw new Exception($"{msg} at line: {++_lineNumber} pos: {++_linePos}");
+        }
 
         private bool IsEOF() => _pos > _text.Length - 1;
 
@@ -130,6 +141,14 @@ namespace PyInterpreter.InterpreterBody
         private void Move()
         {
             _pos++;
+            _linePos++;
+
+            if (_currentChar == '\n')
+            {
+                _lineNumber++;
+                _linePos = 0;
+            }
+
             if (!IsEOF()) _currentChar = _text[_pos];
         }
             
@@ -141,7 +160,8 @@ namespace PyInterpreter.InterpreterBody
 
         public void skipWhiteSpaces()
         {
-            while (!IsEOF() && char.IsWhiteSpace(_currentChar))
+            while (!IsEOF() && char.IsWhiteSpace(_currentChar)
+                   && _currentChar != '\n')
             {
                 Move();
             }
@@ -194,6 +214,38 @@ namespace PyInterpreter.InterpreterBody
         {
             var nextPos = _pos + 1;
             return (!IsEOF(nextPos) && _text[nextPos] != '=');
+        }
+
+        private string GetListItem()
+        {
+            if (_currentChar == ',')
+                Error("Expected expression before ','");
+
+            string result = string.Empty;
+
+            while(!IsEOF() && _currentChar != ',')
+            {
+                result += _currentChar;
+                
+            }
+
+            if (IsEOF()) Error("Expected ']' before EOF");
+
+            return result;
+        }
+
+        private void GetList()
+        {
+            string result = string.Empty;
+            Move();
+
+            while (_currentChar != ']')
+            {
+                result += GetListItem();
+                // expected ','
+                result += _currentChar;
+                Move();
+            }
         }
 
         public Token GetNextToken()
@@ -267,11 +319,31 @@ namespace PyInterpreter.InterpreterBody
                     return GetKeywordOrVariable();
 
                 if (_currentChar == '=' && IsAssignment())
-                {
+                {            
                     Move();
                     var token = new Token(TokenType.ASSIGN, "=");
                     _lexemTable.AddOperator(token);
                     return token;
+                }
+
+                if (_currentChar == '=') Error("Expected assignment symbol '='");
+
+                if (_currentChar == '[')
+                {
+                    Move();
+                    return new Token(TokenType.OPEN_BRACKETS, "[");
+                }
+
+                if (_currentChar == ']')
+                {
+                    Move();
+                    return new Token(TokenType.CLOSE_BRACKETS, "]");
+                }
+
+                if (_currentChar == ',')
+                {
+                    Move();
+                    return new Token(TokenType.COMMA, ",");
                 }
 
                 Error();

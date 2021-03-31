@@ -4,14 +4,11 @@ using System.Text;
 
 namespace PyInterpreter.InterpreterBody.Results
 {
-    public class NoResult : Result
+    public class ListResult: Result
     {
-        public NoResult()
+        public ListResult(IList<IResult> results): base(results)
         {
+            //Value = results;
         }
-
-        //public NoResult(string value) : base(value)
-        //{
-        //}
     }
 }
