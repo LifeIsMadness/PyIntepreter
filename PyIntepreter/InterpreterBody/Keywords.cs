@@ -8,7 +8,9 @@ namespace PyInterpreter.InterpreterBody
     {
         public static Dictionary<string, TokenType> ReservedWords => new Dictionary<string, TokenType>
         {
-
+            ["if"] = TokenType.IF,
+            ["elif"] = TokenType.ELIF,
+            ["else"] = TokenType.ELSE,
         };
 
         public static TokenType GetKeyword(string keyword) => 

@@ -7,11 +7,11 @@ namespace PyInterpreter.InterpreterBody.Expressions
 {
     public class ProgramExpr : IExpression
     {
-        public readonly IList<IExpression> nodes;
+        public readonly IExpression StatementList;
 
-        public ProgramExpr(IList<IExpression> nodes)
+        public ProgramExpr(IExpression statements)
         {
-            this.nodes = nodes;
+            StatementList = statements;
         }
 
         public void Accept(ExpressionVisitor expressionVisitor)

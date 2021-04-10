@@ -74,5 +74,35 @@ namespace PyInterpreter.InterpreterBody.Results
             var newVal = Value - right.Value;
             return GetResult(newVal);
         }
+
+        public override IResult Equal(IResult right)
+        {
+            return new BoolResult(Value == right.Value);
+        }
+
+        public override IResult Greater(IResult right)
+        {
+            return new BoolResult(Value > right.Value);
+        }
+
+        public override IResult Lesser(IResult right)
+        {
+            return new BoolResult(Value < right.Value);
+        }
+
+        public override IResult GreaterEqual(IResult right)
+        {
+            return new BoolResult(Value >= right.Value);
+        }
+
+        public override IResult LesserEqual(IResult right)
+        {
+            return new BoolResult(Value <= right.Value);
+        }
+
+        public override IResult NotEqual(IResult right)
+        {
+            return new BoolResult(Value != right.Value);
+        }
     }
 }

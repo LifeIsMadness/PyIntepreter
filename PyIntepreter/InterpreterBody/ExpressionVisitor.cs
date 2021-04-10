@@ -15,6 +15,86 @@ namespace PyInterpreter.InterpreterBody
 
         public IResult Result { get; set; }
 
+        public void VisitEqualExpr(EqualExpr expr)
+        {
+            expr._left.Accept(this);
+            var left = Result;
+            expr._right.Accept(this);
+            var right = Result;
+
+            Result = expr.Eval(left, right);
+        }
+
+        internal void VisitIfExpr(IfExpr expr)
+        {
+            List<IResult> conditions = new List<IResult>();
+            foreach (var conditionExpr in expr.Conditions)
+            {
+                conditionExpr.Accept(this);
+                conditions.Add(Result);
+            }
+
+            //List<IResult> statements = new List<IResult>();
+            //foreach (var statementList in expr.Statements)
+            //{
+            //    statementList.Accept(this);
+            //    statements.Add(Result);
+            //}
+
+            var way = expr.Eval(conditions);
+            way.Accept(this);
+        }
+
+        public void VisitNotEqualExpr(NotEqualExpr expr)
+        {
+            expr._left.Accept(this);
+            var left = Result;
+            expr._right.Accept(this);
+            var right = Result;
+
+            Result = expr.Eval(left, right);
+        }
+
+        public void VisitGreaterExpr(GreaterExpr expr)
+        {
+            expr._left.Accept(this);
+            var left = Result;
+            expr._right.Accept(this);
+            var right = Result;
+
+            Result = expr.Eval(left, right);
+        }
+
+        public void VisitLesserExpr(LesserExpr expr)
+        {
+            expr._left.Accept(this);
+            var left = Result;
+            expr._right.Accept(this);
+            var right = Result;
+
+            Result = expr.Eval(left, right);
+        }
+
+        public void VisitGreaterEqualExpr(GreaterEqualExpr expr)
+        {
+            expr._left.Accept(this);
+            var left = Result;
+            expr._right.Accept(this);
+            var right = Result;
+
+            Result = expr.Eval(left, right);
+        }
+
+        public void VisitLesserEqualExpr(LesserEqualExpr expr)
+        {
+            expr._left.Accept(this);
+            var left = Result;
+            expr._right.Accept(this);
+            var right = Result;
+
+            Result = expr.Eval(left, right);
+        }
+
         public ExpressionVisitor()
         {
             _symbolTable = new SymbolTable();
@@ -33,9 +113,14 @@ namespace PyInterpreter.InterpreterBody
 
         public void VisitProgramExpr(ProgramExpr expr)
         {
-            foreach (var node in expr.nodes)
+            expr.StatementList.Accept(this);
+        }
+
+        public void VisitStatementListExpr(StatementListExpr expr)
+        {
+            foreach (var statement in expr.Statements)
             {
-                node.Accept(this);
+                statement.Accept(this);
             }
         }
 
@@ -53,7 +138,7 @@ namespace PyInterpreter.InterpreterBody
 
         }
 
-        public void VisitNumberExpr(NumberExpr expr)
+        public void VisitNumberExpr(LiteralExpr expr)
         {
             Result = expr.Eval();
         }

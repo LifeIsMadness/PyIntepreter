@@ -25,5 +25,17 @@ namespace PyInterpreter.InterpreterBody.Results
         public IResult Add(IResult right);
 
         public IResult Sub(IResult right);
+
+        public IResult Equal(IResult right);
+
+        public IResult NotEqual(IResult right);
+
+        public IResult Greater(IResult right);
+
+        public IResult Lesser(IResult right);
+
+        public IResult GreaterEqual(IResult right);
+
+        public IResult LesserEqual(IResult right);
     }
 }

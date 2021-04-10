@@ -9,8 +9,7 @@ namespace PyInterpreter
     class Program
     {   
         static void PrintTable(SymbolTable table)
-        {
-            
+        {        
             Console.WriteLine("Variables");
             Console.WriteLine("Name\tType\tValue");
             foreach (var pair in table.Dict)
@@ -43,12 +42,12 @@ namespace PyInterpreter
             //    }
             //}
             
-            string fileName = "input.txt";
+           // string fileName = "input.txt";
            // string text = File.ReadAllText(fileName);
 
             try
             {
-                string text = "a = 1+[1,2,3][1]";
+                string text = "a = [] ";
                 Console.WriteLine($"Program text: \n{text}");
                 Console.WriteLine("-----------------------");
                 var scanner = new Tokenizer(text);

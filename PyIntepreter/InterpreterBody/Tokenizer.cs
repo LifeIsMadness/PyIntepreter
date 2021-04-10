@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -110,6 +111,9 @@ namespace PyInterpreter.InterpreterBody
         public int LinePos { get => _linePos; }
         public int LineNumber { get => _lineNumber; }
 
+        private int _indentLevel = 0;
+        public int IndentLevel { get => _indentLevel; }
+
         public Tokenizer(string text)
         {
             _text = text;
@@ -186,6 +190,7 @@ namespace PyInterpreter.InterpreterBody
             if (_currentChar == '.')
             {
                 result.Append(_currentChar);
+                Move();
                 SetDigitResult(result);
                 token = new Token(TokenType.FLOAT_LITERAL, result.ToString());
             }
@@ -194,6 +199,32 @@ namespace PyInterpreter.InterpreterBody
 
             _lexemTable.AddLiteral(token);
             return token;
+        }
+
+        private Token GetString()
+        {
+            char terminatingChar = _currentChar == '\'' ? '\'' : '"';
+            string result = string.Empty;
+
+            bool isTerminated = false;
+            while(!IsEOF())
+            {
+                Move();
+
+                if (_currentChar == terminatingChar)
+                {
+                    isTerminated = true;
+                    break;
+                }
+                result += _currentChar;
+
+            }
+            Move();
+
+            if (!isTerminated)
+                Error("EOL while scanning string literal");
+
+            return new Token(TokenType.STRING_LITERAL, result);
         }
 
         private Token GetKeywordOrVariable()
@@ -216,42 +247,58 @@ namespace PyInterpreter.InterpreterBody
             return (!IsEOF(nextPos) && _text[nextPos] != '=');
         }
 
-        private string GetListItem()
+        private Token GetComparisonOperator()
         {
-            if (_currentChar == ',')
-                Error("Expected expression before ','");
+            string[] lexems = {"==", "!=", ">", "<", ">=", "<="};
+            string value = string.Empty;
 
-            string result = string.Empty;
-
-            while(!IsEOF() && _currentChar != ',')
+            while (!IsEOF() && !char.IsWhiteSpace(_currentChar))
             {
-                result += _currentChar;
-                
-            }
-
-            if (IsEOF()) Error("Expected ']' before EOF");
-
-            return result;
-        }
-
-        private void GetList()
-        {
-            string result = string.Empty;
-            Move();
-
-            while (_currentChar != ']')
-            {
-                result += GetListItem();
-                // expected ','
-                result += _currentChar;
+                value += _currentChar;
                 Move();
             }
+
+            // Лексическая ошибка 1)
+            if (!lexems.Contains(value))
+                Error($"Expected comparison operator");
+
+            switch (value)
+            {
+                case "==":
+                    return new Token(TokenType.EQUAL, value);
+                case "!=":
+                    return new Token(TokenType.NOT_EQUAL, value);
+                case ">":
+                    return new Token(TokenType.GREATER, value);
+                case "<":
+                    return new Token(TokenType.LESSER, value);
+                case ">=":
+                    return new Token(TokenType.GREATER_EQUAL, value);
+                case "<=":
+                        return new Token(TokenType.LESSER_EQUAL, value);
+                default:
+                    return null;
+            }
+        }
+
+        private void SetIdentation()
+        {
+            while(_currentChar == '\t')
+            {
+                _indentLevel++;
+            }
+
         }
 
         public Token GetNextToken()
         {          
             while(!IsEOF())
             {
+                if(_currentChar == '\t' && _linePos == 0)
+                {
+                    SetIdentation();
+                }
+
                 if (_currentChar == '\n')
                 {
                     Move();
@@ -261,11 +308,16 @@ namespace PyInterpreter.InterpreterBody
                 if (char.IsWhiteSpace(_currentChar))
                 {
                     skipWhiteSpaces();
+                    // check for EOF again
                     continue;
                 }
 
                 if (char.IsDigit(_currentChar))
                     return GetNumber();
+
+                if (_currentChar == '\''
+                    || _currentChar == '"')
+                    return GetString();
 
                 if (_currentChar == '+')
                 {
@@ -326,7 +378,14 @@ namespace PyInterpreter.InterpreterBody
                     return token;
                 }
 
-                if (_currentChar == '=') Error("Expected assignment symbol '='");
+                if (_currentChar == '='
+                    || _currentChar == '!'
+                    || _currentChar == '>'
+                    || _currentChar == '<')
+                {
+                    var token = GetComparisonOperator();
+                    return token;
+                }
 
                 if (_currentChar == '[')
                 {
@@ -344,6 +403,12 @@ namespace PyInterpreter.InterpreterBody
                 {
                     Move();
                     return new Token(TokenType.COMMA, ",");
+                }
+
+                if (_currentChar == ':')
+                {
+                    Move();
+                    return new Token(TokenType.COLON, ":");
                 }
 
                 Error();

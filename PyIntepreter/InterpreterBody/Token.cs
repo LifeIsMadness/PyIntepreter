@@ -6,19 +6,29 @@ namespace PyInterpreter.InterpreterBody
 {
     public enum TokenType
     {
-        // types
+        // Types
         INTEGER_LITERAL,
         FLOAT_LITERAL,
-        // Numerical operations
+        STRING_LITERAL,
+        // Numerical operators
         PLUS,
         MINUS,
         MUL,
         DIV,
         OPEN_PARANTHESIS,
         CLOSE_PARANTHESIS,
+        // Comparison operators
+        EQUAL,
+        NOT_EQUAL,
+        GREATER,
+        LESSER,
+        GREATER_EQUAL,
+        LESSER_EQUAL,
 
         // Keywords
-
+        IF,
+        ELIF,
+        ELSE,
         // Variables
         ID,
         ASSIGN,
@@ -27,7 +37,9 @@ namespace PyInterpreter.InterpreterBody
         CLOSE_BRACKETS,
         LIST,
         // Others
+        INDENT,
         COMMA,
+        COLON,
         ENDLINE,
         EOF,
 

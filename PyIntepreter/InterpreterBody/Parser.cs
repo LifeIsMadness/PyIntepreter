@@ -99,6 +99,7 @@ namespace PyInterpreter.InterpreterBody
         /// <summary>
         /// factor: INTEGER_LITERAL
         ///         | FLOAT_LITERAL
+        ///         | STRING_LITERAL
         ///         | LPAREN expr RPAREN
         ///         | variable
         ///         | list
@@ -111,12 +112,17 @@ namespace PyInterpreter.InterpreterBody
             {
                 case TokenType.INTEGER_LITERAL:
                     Eat(TokenType.INTEGER_LITERAL);
-                    result = new NumberExpr(token);
+                    result = new LiteralExpr(token);
                     break;
 
                 case TokenType.FLOAT_LITERAL:
                     Eat(TokenType.FLOAT_LITERAL);
-                    result = new NumberExpr(token);
+                    result = new LiteralExpr(token);
+                    break;
+
+                case TokenType.STRING_LITERAL:
+                    Eat(TokenType.STRING_LITERAL);
+                    result = new LiteralExpr(token);
                     break;
 
                 case TokenType.OPEN_PARANTHESIS:
@@ -182,13 +188,77 @@ namespace PyInterpreter.InterpreterBody
         }
 
         /// <summary>
+        /// compr: expr ((EQUAL 
+        ///               | NOT_EQUAL
+        ///               | GREATER
+        ///               | LESSER
+        ///               | GREATER_EQUAL
+        ///               | LESSER_EQUAL) expr)*
+        /// </summary>
+        private IExpression Compr()
+        {
+            TokenType[] operations = { 
+                TokenType.EQUAL, TokenType.NOT_EQUAL,
+                TokenType.GREATER, TokenType.LESSER,
+                TokenType.GREATER_EQUAL, TokenType.LESSER_EQUAL,
+            };
+            var result = Expr();
+
+            while (operations.Contains(_currentToken.Type))
+            {
+                var token = _currentToken;
+                if (token.Type == TokenType.EQUAL)
+                {
+                    Eat(TokenType.EQUAL);
+                    result = new EqualExpr(result, Expr());
+                }
+                else if (token.Type == TokenType.NOT_EQUAL)
+                {
+                    Eat(TokenType.NOT_EQUAL);
+                    result = new NotEqualExpr(result, Expr());
+                }
+                else if (token.Type == TokenType.GREATER)
+                {
+                    Eat(TokenType.GREATER);
+                    result = new GreaterExpr(result, Expr());
+                }
+                else if (token.Type == TokenType.LESSER)
+                {
+                    Eat(TokenType.LESSER);
+                    result = new LesserExpr(result, Expr());
+                }
+                else if (token.Type == TokenType.GREATER_EQUAL)
+                {
+                    Eat(TokenType.GREATER_EQUAL);
+                    result = new GreaterEqualExpr(result, Expr());
+                }
+                else if (token.Type == TokenType.LESSER_EQUAL)
+                {
+                    Eat(TokenType.LESSER_EQUAL);
+                    result = new LesserEqualExpr(result, Expr());
+                }
+            }
+            return result;
+        }
+
+        /// <summary>
         /// Arithmetic expression parser.
         /// Rules:
         /// program: statement_list
+        /// compound_statement: if_statement
+        /// if_statement: IF compr COLON statement_list 
+        ///               (ELIF compr COLON statement_list)*
+        ///               (ELSE compr COLON statement_list)*
         /// statement_list: statement | statement NEWLINE statement_list
-        /// statement: assignment_statement | empty
-        /// assignment_statement: variable ASSIGN expr
+        /// statement: compound_statement | assignment_statement | empty
+        /// assignment_statement: variable ASSIGN compr
         /// empty:
+        /// compr: expr ((EQUAL 
+        ///               | NOT_EQUAL
+        ///               | GREATER
+        ///               | LESSER
+        ///               | GREATER_EQUAL
+        ///               | LESSER_EQUAL) expr)*
         /// expr: term ((PLUS | MINUS) term)*
         /// term: index ((MUL | DIV) index)*
         /// index: PLUS index
@@ -196,6 +266,7 @@ namespace PyInterpreter.InterpreterBody
         ///        | factor (LBRACKET expr RBRACKET)*
         /// factor: INTEGER_LITERAL
         ///         | FLOAT_LITERAL
+        ///         | STRING_LITERAL
         ///         | LPAREN expr RPAREN
         ///         | variable
         ///         | list
@@ -213,13 +284,11 @@ namespace PyInterpreter.InterpreterBody
                 if (token.Type == TokenType.PLUS)
                 {
                     Eat(TokenType.PLUS);
-                    //result += Term();
                     result = new AddExpr(result, Term());
                 }
                 else if (token.Type == TokenType.MINUS)
                 {
                     Eat(TokenType.MINUS);
-                    //result -= Term();
                     result = new SubExpr(result, Term());
                 }
             }
@@ -238,14 +307,14 @@ namespace PyInterpreter.InterpreterBody
         }
 
         /// <summary>
-        /// assignment_statement: variable ASSIGN expr
+        /// assignment_statement: variable ASSIGN compr
         /// </summary>
         private IExpression AssignmentStatement()
         {
             var token = _currentToken;
             var name = Variable();
             Eat(TokenType.ASSIGN);
-            var expr = Expr();
+            var expr = Compr();
             return new AssignExpr(name, expr, SymbolTable);
         }
 
@@ -258,6 +327,10 @@ namespace PyInterpreter.InterpreterBody
             if (_currentToken.Type == TokenType.ID)
             {
                 result = AssignmentStatement();
+            }
+            else if (_currentToken.Type == TokenType.IF)
+            {
+                result = CompoundStatement();
             }
             else if (_currentToken.Type == TokenType.EOF
                      || _currentToken.Type == TokenType.ENDLINE)
@@ -272,7 +345,7 @@ namespace PyInterpreter.InterpreterBody
         /// <summary>
         /// statement_list: statement | statement NEWLINE statement_list
         /// </summary>
-        private List<IExpression> StatementList()
+        private IExpression StatementList()
         {
             var result = Statement();
             List<IExpression> results = new List<IExpression> { result };
@@ -280,6 +353,11 @@ namespace PyInterpreter.InterpreterBody
             while (_currentToken.Type == TokenType.ENDLINE)
             {
                 Eat(TokenType.ENDLINE);
+                if (_currentToken.Type == TokenType.ELIF
+                    || _currentToken.Type == TokenType.ELSE)
+                {
+                    return new StatementListExpr(results);
+                }
                 // TODO: u can exit here if EOF 
                 results.Add(Statement());
             }
@@ -289,7 +367,57 @@ namespace PyInterpreter.InterpreterBody
                 Error("Expected operator");
             }
 
-            return results;
+            return new StatementListExpr(results);
+        }
+
+        /// <summary>
+        /// if_statement: IF compr COLON NEWLINE statement_list 
+        ///               (ELIF compr COLON NEWLINE statement_list)*
+        ///               (ELSE COLON NEWLINE statement_list)*
+        /// </summary>
+        /// <returns></returns>
+        private IExpression IfStatement()
+        {
+            List<IExpression> comprs = new List<IExpression>();
+            List<IExpression> statements = new List<IExpression>();
+            void ifBlock()
+            {
+                Eat(TokenType.COLON);
+                Eat(TokenType.ENDLINE);
+                statements.Add(StatementList());
+            }
+
+            Eat(TokenType.IF);
+            comprs.Add(Compr());
+            ifBlock();
+
+            while (_currentToken.Type == TokenType.ELIF)
+            {
+                Eat(TokenType.ELIF);
+                comprs.Add(Compr());
+                ifBlock();
+            }
+
+            if(_currentToken.Type == TokenType.ELSE)
+            {
+                Eat(TokenType.ELSE);
+                ifBlock();
+            }
+
+            return new IfExpr(comprs, statements);
+        }
+
+        private IExpression CompoundStatement()
+        {
+            IExpression result = null;
+            switch (_currentToken.Type)
+            {
+                case TokenType.IF:
+                    result =  IfStatement();
+                    break;
+            }
+
+            return result;
         }
 
         /// <summary>
@@ -297,7 +425,14 @@ namespace PyInterpreter.InterpreterBody
         /// </summary>
         private IExpression Program()
         {
-            return new ProgramExpr(StatementList());
+            var statements = StatementList();
+            if (_currentToken.Type == TokenType.ELIF
+                || _currentToken.Type == TokenType.ELSE)
+            {
+                Error("Closest 'if' wasn't found");
+            }
+
+            return new ProgramExpr(statements);
         }
 
         public IExpression Parse()

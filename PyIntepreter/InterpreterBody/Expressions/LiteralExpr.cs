@@ -5,11 +5,11 @@ using System.Text;
 
 namespace PyInterpreter.InterpreterBody.Expressions
 {
-    public class NumberExpr : IExpression
+    public class LiteralExpr : IExpression
     {
         private Token _token;
 
-        public NumberExpr(Token token)
+        public LiteralExpr(Token token)
         {
             _token = token;
         }
@@ -25,8 +25,9 @@ namespace PyInterpreter.InterpreterBody.Expressions
             {
                 return new IntResult(int.Parse(_token.Value));
             }
-            else
-                return new FloatResult(double.Parse(_token.Value));      
+            else if (_token.Type == TokenType.FLOAT_LITERAL)
+                return new FloatResult(double.Parse(_token.Value.Replace('.', ',')));
+            else return new StringResult(_token.Value);
         }
     }
 }

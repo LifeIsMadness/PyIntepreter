@@ -10,5 +10,36 @@ namespace PyInterpreter.InterpreterBody.Results
         {
             //Value = results;
         }
+
+        public override IResult Equal(IResult right)
+        {
+            throw new Exception("Not supported");
+        }
+
+        public override IResult Greater(IResult right)
+        {
+            throw new Exception("Not supported");
+        }
+
+        public override IResult Lesser(IResult right)
+        {
+            throw new Exception("Not supported");
+        }
+
+        public override IResult GreaterEqual(IResult right)
+        {
+            throw new Exception("Not supported");
+        }
+
+        public override IResult LesserEqual(IResult right)
+        {
+            throw new Exception("Not supported");
+        }
+
+        public override IResult NotEqual(IResult right)
+        {
+            throw new Exception("Not supported");
+        }
     }
 }
+

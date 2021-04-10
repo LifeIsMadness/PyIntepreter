@@ -25,9 +25,13 @@ namespace PyInterpreter.InterpreterBody.SymbTable
             {
                 Type = "float";
             }
+            else if (Value.GetType() == typeof(BoolResult))
+            {
+                Type = "bool";   
+            }
             else
             {
-                Type = "list";   
+                Type = "list";
             }
         }
     }

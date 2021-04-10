@@ -85,5 +85,35 @@ namespace PyInterpreter.InterpreterBody.Results
             //return newRes;
             throw new NotImplementedException();
         }
+
+        public virtual IResult Equal(IResult right)
+        {
+            throw new NotImplementedException();
+        }
+
+        public virtual IResult Greater(IResult right)
+        {
+            throw new NotImplementedException();
+        }
+
+        public virtual IResult Lesser(IResult right)
+        {
+            throw new NotImplementedException();
+        }
+
+        public virtual IResult GreaterEqual(IResult right)
+        {
+            throw new NotImplementedException();
+        }
+
+        public virtual IResult LesserEqual(IResult right)
+        {
+            throw new NotImplementedException();
+        }
+
+        public virtual IResult NotEqual(IResult right)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
