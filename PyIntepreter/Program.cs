@@ -47,7 +47,7 @@ namespace PyInterpreter
 
             try
             {
-                string text = "a = [] ";
+                string text = "a = 1\nif a > 9:\n\tb = a * 4\nc = a";
                 Console.WriteLine($"Program text: \n{text}");
                 Console.WriteLine("-----------------------");
                 var scanner = new Tokenizer(text);

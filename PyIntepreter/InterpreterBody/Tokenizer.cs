@@ -151,6 +151,7 @@ namespace PyInterpreter.InterpreterBody
             {
                 _lineNumber++;
                 _linePos = 0;
+                SetIdentation();
             }
 
             if (!IsEOF()) _currentChar = _text[_pos];
@@ -283,10 +284,13 @@ namespace PyInterpreter.InterpreterBody
 
         private void SetIdentation()
         {
+            _indentLevel = 0;
             while(_currentChar == '\t')
             {
                 _indentLevel++;
+                Move();
             }
+
 
         }
 
@@ -294,9 +298,10 @@ namespace PyInterpreter.InterpreterBody
         {          
             while(!IsEOF())
             {
-                if(_currentChar == '\t' && _linePos == 0)
+                if(_linePos == 0)
                 {
                     SetIdentation();
+                    //continue;
                 }
 
                 if (_currentChar == '\n')

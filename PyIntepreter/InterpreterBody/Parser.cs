@@ -17,13 +17,18 @@ namespace PyInterpreter.InterpreterBody
 
         public SymbolTable SymbolTable { get => _symbolTable; set => _symbolTable = value; }
 
+        private Stack<int> _indents = new Stack<int>();
+
         // TODO: How to handle if the input will be '3   3';
         public Parser(Tokenizer tokenizer)
         {
             _tokenizer = tokenizer;
-            _currentToken = tokenizer.GetNextToken();
-        }   
-        
+            _currentToken = _tokenizer.GetNextToken();
+
+            // pushing first indentLevel
+            //_indents.Push(_tokenizer.IndentLevel);
+        }
+
         private void Error() => throw new Exception($"Invalid syntax at line: " +
             $"{_tokenizer.LineNumber + 1} pos: {_tokenizer.LinePos + 1}");
 
@@ -108,7 +113,7 @@ namespace PyInterpreter.InterpreterBody
         {
             var token = _currentToken;
             IExpression result = null;
-            switch(token.Type)
+            switch (token.Type)
             {
                 case TokenType.INTEGER_LITERAL:
                     Eat(TokenType.INTEGER_LITERAL);
@@ -148,7 +153,7 @@ namespace PyInterpreter.InterpreterBody
 
                 case TokenType.OPEN_BRACKETS:
                     result = List();
-      
+
                     break;
 
                 default:
@@ -197,7 +202,7 @@ namespace PyInterpreter.InterpreterBody
         /// </summary>
         private IExpression Compr()
         {
-            TokenType[] operations = { 
+            TokenType[] operations = {
                 TokenType.EQUAL, TokenType.NOT_EQUAL,
                 TokenType.GREATER, TokenType.LESSER,
                 TokenType.GREATER_EQUAL, TokenType.LESSER_EQUAL,
@@ -350,24 +355,52 @@ namespace PyInterpreter.InterpreterBody
             var result = Statement();
             List<IExpression> results = new List<IExpression> { result };
             // TODO: syntax checking
-            while (_currentToken.Type == TokenType.ENDLINE)
+            while (_currentToken.Type == TokenType.ENDLINE 
+                   && _tokenizer.IndentLevel == _indents.Peek())/*(_currentToken.Type == TokenType.ENDLINE)*/
             {
                 Eat(TokenType.ENDLINE);
-                if (_currentToken.Type == TokenType.ELIF
-                    || _currentToken.Type == TokenType.ELSE)
-                {
-                    return new StatementListExpr(results);
-                }
+                //if (_currentToken.Type == TokenType.ELIF
+                //    || _currentToken.Type == TokenType.ELSE)
+                //{
+                //    return new StatementListExpr(results);
+                //}
                 // TODO: u can exit here if EOF 
                 results.Add(Statement());
             }
 
-            if (_currentToken.Type != TokenType.EOF)
+            if (_currentToken.Type != TokenType.EOF
+                && _currentToken.Type != TokenType.ENDLINE)
             {
                 Error("Expected operator");
             }
 
             return new StatementListExpr(results);
+        }
+
+        /// <summary>
+        /// block: NEWLINE INDENT statement_list DEDENT
+        /// </summary>
+        /// <returns></returns>
+        private IExpression Block()
+        {
+            var indentLvl = _tokenizer.IndentLevel;
+            Eat(TokenType.ENDLINE);
+
+            // INDENT
+            if (indentLvl == _tokenizer.IndentLevel)
+                Error("Expected an indented block");
+
+            _indents.Push(_tokenizer.IndentLevel);
+
+            var statements = StatementList();
+            if (_indents.Peek() < _tokenizer.IndentLevel)
+                Error("Unexpected indent");
+
+            while (_indents.Peek() > _tokenizer.IndentLevel)
+                _indents.Pop();
+
+            return statements;
+
         }
 
         /// <summary>
@@ -383,8 +416,9 @@ namespace PyInterpreter.InterpreterBody
             void ifBlock()
             {
                 Eat(TokenType.COLON);
-                Eat(TokenType.ENDLINE);
-                statements.Add(StatementList());
+                //Eat(TokenType.ENDLINE);
+                //statements.Add(StatementList());
+                statements.Add(Block());
             }
 
             Eat(TokenType.IF);
@@ -425,12 +459,17 @@ namespace PyInterpreter.InterpreterBody
         /// </summary>
         private IExpression Program()
         {
+            _indents.Push(_tokenizer.IndentLevel);
+
             var statements = StatementList();
-            if (_currentToken.Type == TokenType.ELIF
-                || _currentToken.Type == TokenType.ELSE)
-            {
-                Error("Closest 'if' wasn't found");
-            }
+
+            if (_indents.Peek() != _tokenizer.IndentLevel)
+                Error("Unexpected indent");
+            //if (_currentToken.Type == TokenType.ELIF
+            //    || _currentToken.Type == TokenType.ELSE)
+            //{
+            //    Error("Closest 'if' wasn't found");
+            //}
 
             return new ProgramExpr(statements);
         }
