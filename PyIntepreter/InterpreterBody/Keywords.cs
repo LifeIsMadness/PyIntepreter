@@ -11,6 +11,11 @@ namespace PyInterpreter.InterpreterBody
             ["if"] = TokenType.IF,
             ["elif"] = TokenType.ELIF,
             ["else"] = TokenType.ELSE,
+            ["for"] = TokenType.FOR,
+            ["while"] = TokenType.WHILE,
+            ["in"] = TokenType.IN,
+            ["and"] = TokenType.AND,
+            ["or"] = TokenType.OR,
         };
 
         public static TokenType GetKeyword(string keyword) => 

@@ -3,22 +3,21 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using PyInterpreter.InterpreterBody.SymbTable;
+using PyInterpreter.InterpreterBody.Visitors;
 
 namespace PyInterpreter.InterpreterBody.Expressions
 {
     public class AssignExpr : IExpression
     {
         public IExpression _left, _right;
-        private SymbolTable _vars;
 
-        public AssignExpr(IExpression left, IExpression right, SymbolTable symbolTable)
+        public AssignExpr(IExpression left, IExpression right)
         {
             _left = left;
             _right = right;
-            _vars = symbolTable;
         }
 
-        public void Accept(ExpressionVisitor expressionVisitor)
+        public void Accept(IVisitor expressionVisitor)
         {
             expressionVisitor.VisitAssignExpr(this);
         }

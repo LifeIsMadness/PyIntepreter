@@ -1,5 +1,6 @@
 ﻿using PyInterpreter.InterpreterBody.Results;
 using PyInterpreter.InterpreterBody.SymbTable;
+using PyInterpreter.InterpreterBody.Visitors;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -15,7 +16,7 @@ namespace PyInterpreter.InterpreterBody.Expressions
             _name = name;
         }
 
-        public void Accept(ExpressionVisitor expressionVisitor)
+        public void Accept(IVisitor expressionVisitor)
         {
             expressionVisitor.VisitVariableExpr(this);
         }

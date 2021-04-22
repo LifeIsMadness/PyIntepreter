@@ -1,4 +1,5 @@
 ﻿using PyInterpreter.InterpreterBody.Results;
+using PyInterpreter.InterpreterBody.Visitors;
 
 namespace PyInterpreter.InterpreterBody.Expressions
 {
@@ -13,7 +14,7 @@ namespace PyInterpreter.InterpreterBody.Expressions
             _right = right;
         }
 
-        public void Accept(ExpressionVisitor visitor)
+        public void Accept(IVisitor visitor)
         {
             visitor.VisitEqualExpr(this);
         }

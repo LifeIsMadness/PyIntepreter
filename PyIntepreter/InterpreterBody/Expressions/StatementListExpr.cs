@@ -1,4 +1,5 @@
-﻿using System;
+﻿using PyInterpreter.InterpreterBody.Visitors;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -13,7 +14,7 @@ namespace PyInterpreter.InterpreterBody.Expressions
             Statements = statements;
         }
 
-        public void Accept(ExpressionVisitor expressionVisitor)
+        public void Accept(IVisitor expressionVisitor)
         {
             expressionVisitor.VisitStatementListExpr(this);
         }

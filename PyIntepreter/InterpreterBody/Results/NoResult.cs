@@ -8,6 +8,7 @@ namespace PyInterpreter.InterpreterBody.Results
     {
         public NoResult()
         {
+            Value = "None";
         }
 
         //public NoResult(string value) : base(value)

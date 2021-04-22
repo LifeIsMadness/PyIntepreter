@@ -1,19 +1,76 @@
 ﻿using PyInterpreter.InterpreterBody.Expressions;
+using PyInterpreter.InterpreterBody.Expressions.Builtins;
 using PyInterpreter.InterpreterBody.Results;
 using PyInterpreter.InterpreterBody.SymbTable;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace PyInterpreter.InterpreterBody
+namespace PyInterpreter.InterpreterBody.Visitors
 {
-    public class ExpressionVisitor
+    public class ExpressionVisitor: IVisitor
     {
-        protected SymbTable.SymbolTable _symbolTable;
 
-        public SymbolTable SymbolTable { get => _symbolTable; }
+        public void VisitAndExpr(AndExpr expr)
+        {
+            expr.Left.Accept(this);
+            var left = Result;
+            if (left.Value == false)
+            {
+                Result = expr.Eval(left);
+            }
+            else
+            {
+                expr.Right.Accept(this);
+                var right = Result;
+
+                Result = expr.Eval(left, right);
+            }
+        }
+
+        public void VisitOrExpr(OrExpr expr)
+        {
+            expr.Left.Accept(this);
+            var left = Result;
+            expr.Right.Accept(this);
+            var right = Result;
+
+            Result = expr.Eval(left, right);
+        }
+
+        public SymbolTable SymbolTable { get; set; }
+
+        public Dictionary<string, FunctionBodyExpr> Builtins { get; set; }
 
         public IResult Result { get; set; }
+
+        /////////////////////////////////////////////
+        // Visit builtin functions.
+        public void VisitInputExpr(InputFunctionExpr expr)
+        {
+            Result = expr.Eval();
+        }
+
+        public void VisitPrintExpr(PrintFunctionExpr expr)
+        {
+            Result = expr.Eval();
+        }
+
+        public void VisitRangeExpr(RangeFunctionExpr expr)
+        {
+            Result = expr.Eval();
+        }
+
+        public void VisitIntExpr(IntFunctionExpr expr)
+        {
+            Result = expr.Eval();
+        }
+
+        public void VisitLenExpr(LenFunctionExpr expr)
+        {
+            Result = expr.Eval();
+        }
+        /////////////////////////////////////////////
 
         public void VisitEqualExpr(EqualExpr expr)
         {
@@ -25,7 +82,57 @@ namespace PyInterpreter.InterpreterBody
             Result = expr.Eval(left, right);
         }
 
-        internal void VisitIfExpr(IfExpr expr)
+        public void VisitFunctionExpr(FunctionExpr expr)
+        {
+            // TODO: if not callable
+            var name = ((VariableExpr)expr.Name).Eval().Value;
+            
+            List<IResult> args = new List<IResult>();
+            foreach (var arg in expr.Args)
+            {
+                arg.Accept(this);
+                args.Add(Result);
+            }
+
+            if (Builtins.TryGetValue(name, out FunctionBodyExpr func))
+            {
+                func.Args = args;
+                func.Accept(this);
+            }
+            else throw new Exception("No such function");
+        }
+
+        public void VisitWhileExpr(WhileExpr expr)
+        {
+
+            expr.Condition.Accept(this);
+            var condition = Result;
+            while (expr.Eval(condition).Value)
+            {
+                expr.Statements.Accept(this);
+                expr.Condition.Accept(this);
+                condition = Result;
+            }
+        }
+
+        public void VisitForExpr(ForExpr expr)
+        {
+
+            // expr.Variable.Accept(this);
+            //var name = Result;
+            var name = ((VariableExpr)expr.Variable).Eval();
+            expr.Iterable.Accept(this);
+            var iterable = Result;
+            
+            foreach (var item in iterable.Value)
+            {
+                var variable = new Variable(name.Value, item);
+                SymbolTable.SetVariable(name.Value, variable);
+                expr.Statements.Accept(this);
+            }
+        }
+
+        public void VisitIfExpr(IfExpr expr)
         {
             List<IResult> conditions = new List<IResult>();
             foreach (var conditionExpr in expr.Conditions)
@@ -97,10 +204,10 @@ namespace PyInterpreter.InterpreterBody
 
         public ExpressionVisitor()
         {
-            _symbolTable = new SymbolTable();
+            
         }
 
-        internal void VisitIndexExpr(IndexExpr expr)
+        public void VisitIndexExpr(IndexExpr expr)
         {
             expr._list.Accept(this);
             var list = Result;
@@ -127,7 +234,7 @@ namespace PyInterpreter.InterpreterBody
         public void VisitListExpr(ListExpr expr)
         {
             List<IResult> items = new List<IResult>();
-
+            
             foreach (var item in expr.items)
             {
                 item.Accept(this);
@@ -196,19 +303,47 @@ namespace PyInterpreter.InterpreterBody
         public void VisitVariableExpr(VariableExpr expr)
         {
             string varName = expr.Eval().Value;
-            Result = _symbolTable.GetVariable(varName).Value;
+            Result = SymbolTable.GetVariable(varName).Value;
         }
 
         public void VisitAssignExpr(AssignExpr expr)
         {
-            Result = ((VariableExpr)expr._left).Eval();
-            string name = Result.Value;
-            expr._right.Accept(this);
+            if (expr._left is VariableExpr)
+            {
+                Result = ((VariableExpr)expr._left).Eval();
+                string name = Result.Value;
+                expr._right.Accept(this);
 
-            var res = Result.Value;
-            var variable = new Variable(name, Result);
+                var res = Result.Value;
+                var variable = new Variable(name, Result);
 
-            _symbolTable.SetVariable(name, variable);
+                SymbolTable.SetVariable(name, variable);
+            }
+            else if (expr._left is IndexExpr)
+            {
+                var indexes = new Stack<IExpression>();
+                var list = ((IndexExpr)expr._left)._list;
+                indexes.Push(((IndexExpr)expr._left)._indexValue);
+                while (list is IndexExpr)
+                {
+                    indexes.Push(((IndexExpr)list)._indexValue);
+                    list = ((IndexExpr)list)._list;
+                }
+
+                list.Accept(this);
+                var _list = Result;
+                expr._right.Accept(this);
+                var value = Result;
+
+                while (indexes.Count > 1)
+                {
+                    indexes.Pop().Accept(this);
+                    _list = _list.Value[Result.Value];
+                }
+
+                indexes.Pop().Accept(this);
+                _list.Value[Result.Value] = value;
+            }
         }
     }
 }

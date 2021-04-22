@@ -11,6 +11,17 @@ namespace PyInterpreter.InterpreterBody.Results
             //Value = results;
         }
 
+        public override IResult Add(IResult right)
+        {
+            if (right is ListResult)
+            {
+                return new ListResult(Value.AddRange(right.Value));
+            }
+            Value.Add(right);
+            return this;
+        }
+
+
         public override IResult Equal(IResult right)
         {
             throw new Exception("Not supported");

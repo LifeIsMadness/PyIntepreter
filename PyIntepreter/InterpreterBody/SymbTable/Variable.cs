@@ -29,6 +29,14 @@ namespace PyInterpreter.InterpreterBody.SymbTable
             {
                 Type = "bool";   
             }
+            else if (Value.GetType() == typeof(StringResult))
+            {
+                Type = "string";
+            }
+            else if (Value.GetType() == typeof(NoResult))
+            {
+                Type = "NoneType";
+            }
             else
             {
                 Type = "list";

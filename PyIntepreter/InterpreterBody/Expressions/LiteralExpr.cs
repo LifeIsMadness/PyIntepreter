@@ -1,4 +1,5 @@
 ﻿using PyInterpreter.InterpreterBody.Results;
+using PyInterpreter.InterpreterBody.Visitors;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -7,14 +8,16 @@ namespace PyInterpreter.InterpreterBody.Expressions
 {
     public class LiteralExpr : IExpression
     {
-        private Token _token;
+        private readonly Token _token;
+
+        public Token Token => _token;
 
         public LiteralExpr(Token token)
         {
             _token = token;
         }
 
-        public void Accept(ExpressionVisitor visitor)
+        public void Accept(IVisitor visitor)
         {
             visitor.VisitNumberExpr(this);
         }
@@ -27,6 +30,10 @@ namespace PyInterpreter.InterpreterBody.Expressions
             }
             else if (_token.Type == TokenType.FLOAT_LITERAL)
                 return new FloatResult(double.Parse(_token.Value.Replace('.', ',')));
+            else if (_token.Type == TokenType.TRUE)
+                return new BoolResult(true);
+            else if (_token.Type == TokenType.FALSE)
+                return new BoolResult(false);
             else return new StringResult(_token.Value);
         }
     }

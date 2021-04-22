@@ -1,4 +1,5 @@
 ﻿using PyInterpreter.InterpreterBody.Results;
+using PyInterpreter.InterpreterBody.Visitors;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -14,7 +15,7 @@ namespace PyInterpreter.InterpreterBody.Expressions
             _right = right;
         }
 
-        public void Accept(ExpressionVisitor expressionVisitor)
+        public void Accept(IVisitor expressionVisitor)
         {
             expressionVisitor.VisitMinusExpr(this);
         }

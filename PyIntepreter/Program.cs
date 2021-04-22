@@ -1,5 +1,6 @@
 ﻿using PyInterpreter.InterpreterBody;
 using PyInterpreter.InterpreterBody.SymbTable;
+using PyInterpreter.InterpreterBody.Visitors;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -8,15 +9,38 @@ namespace PyInterpreter
 {
     class Program
     {   
-        static void PrintTable(SymbolTable table)
+        static void PrintTable(Interpreter interpreter)
         {        
             Console.WriteLine("Variables");
             Console.WriteLine("Name\tType\tValue");
-            foreach (var pair in table.Dict)
+            foreach (var pair in interpreter.SymbolTable.Dict)
             {
+
+                if (pair.Value.Type == "list")
+                {
+                    //Console.WriteLine();
+                    Console.Write($"{pair.Key}" +
+                    $"\t{pair.Value.Type}");
+                    Console.Write("\t[");
+                    foreach (var item in pair.Value.Value.Value)
+                    {
+                        Console.Write($"{item.Value}, ");
+                    }
+                    Console.Write(']');
+                    Console.WriteLine();
+                    continue;
+                }
                 Console.WriteLine($"{pair.Key}" +
                     $"\t{pair.Value.Type}" +
                     $"\t{pair.Value.Value.Value}");
+            }
+
+            Console.WriteLine("\nBuiltins");
+            Console.WriteLine("Name\tType");
+            foreach (var pair in interpreter.Builtins)
+            {
+                Console.WriteLine($"{pair.Key}" +
+                    "\tbuiltin_function");
             }
         }
 
@@ -42,12 +66,12 @@ namespace PyInterpreter
             //    }
             //}
             
-           // string fileName = "input.txt";
-           // string text = File.ReadAllText(fileName);
+            string fileName = "input.txt";
+            string text = File.ReadAllText(fileName);
 
             try
             {
-                string text = "a = 1\nif a > 9:\n\tb = a * 4\nc = a";
+                //string text = "for i in range(10):\n\tprint(i)";
                 Console.WriteLine($"Program text: \n{text}");
                 Console.WriteLine("-----------------------");
                 var scanner = new Tokenizer(text);
@@ -56,7 +80,7 @@ namespace PyInterpreter
 
                 var result = interpreter.Interpret();
 
-                PrintTable(interpreter.SymbolTable);
+                PrintTable(interpreter);
             }
             catch (Exception ex)
             {

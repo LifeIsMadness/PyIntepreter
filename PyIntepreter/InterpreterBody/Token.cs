@@ -10,7 +10,10 @@ namespace PyInterpreter.InterpreterBody
         INTEGER_LITERAL,
         FLOAT_LITERAL,
         STRING_LITERAL,
-        // Numerical operators
+        TRUE,
+        FALSE,
+        NONE,
+        // Arythmetic operators
         PLUS,
         MINUS,
         MUL,
@@ -29,6 +32,11 @@ namespace PyInterpreter.InterpreterBody
         IF,
         ELIF,
         ELSE,
+        FOR,
+        WHILE,
+        IN,
+        AND,
+        OR,
         // Variables
         ID,
         ASSIGN,

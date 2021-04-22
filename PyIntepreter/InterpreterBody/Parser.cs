@@ -7,6 +7,50 @@ using System.Text;
 
 namespace PyInterpreter.InterpreterBody
 {
+    /// <summary>
+    /// Arithmetic expression parser.
+    /// Rules:
+    /// program: statement_list
+    /// compound_statement: if_statement
+    ///                     | for_statement
+    ///                     | while_statement
+    /// if_statement: IF disjunction COLON block 
+    ///               (ELIF disjunction COLON block)*
+    ///               (ELSE COLON block)*
+    /// for_statement: FOR variable IN disjunction COLON block
+    /// while_statement: WHILE disjunction COLON block
+    /// statement_list: (statement NEWLINE)+ | statement EOF
+    /// statement: compound_statement 
+    ///            | assignment_statement
+    ///            | function_call
+    ///            | empty
+    /// assignment_statement: disjunction (LBRACKET expr RBRACKET)* ASSIGN disjunction
+    /// function_call: ID LPAREN (disjunction (COMMA disjunction)*) RPAREN?
+    /// empty:
+    /// disjuction: conjunction (OR conjunction)*
+    /// conjunction: compr (AND compr)*
+    /// compr: expr ((EQUAL 
+    ///               | NOT_EQUAL
+    ///               | GREATER
+    ///               | LESSER
+    ///               | GREATER_EQUAL
+    ///               | LESSER_EQUAL) expr)*
+    /// expr: term ((PLUS | MINUS) term)*
+    /// term: factor ((MUL | DIV) factor)*
+    /// factor: PLUS factor
+    ///         | MINUS factor
+    ///         | primary
+    /// primary: atom (LBRACKET disjunction RBRACKET)*  
+    ///          | atom LPAREN (disjunction (COMMA disjunction)*)? RPAREN
+    /// atom: INTEGER_LITERAL
+    ///         | FLOAT_LITERAL
+    ///         | STRING_LITERAL
+    ///         | LPAREN disjunction RPAREN
+    ///         | variable
+    ///         | list
+    /// variable: ID
+    /// list: LBRACKET (disjunction (COMMA disjunction)*)* RBRACKET
+    /// </summary>
     public class Parser
     {
         private Tokenizer _tokenizer;
@@ -42,34 +86,10 @@ namespace PyInterpreter.InterpreterBody
             else Error();
         }
 
-        private IExpression @Index()
-        {
-            switch (_currentToken.Type)
-            {
-                case TokenType.PLUS:
-                    Eat(TokenType.PLUS);
-                    return new PlusExpr(Index());
 
-                case TokenType.MINUS:
-                    Eat(TokenType.MINUS);
-                    return new MinusExpr(Index());
-            }
-
-            var result = Factor();
-            while (_currentToken.Type == TokenType.OPEN_BRACKETS)
-            {
-                Eat(TokenType.OPEN_BRACKETS);
-                result = new IndexExpr(result, Expr());
-                Eat(TokenType.CLOSE_BRACKETS);
-
-                //if (_currentToken.Type != TokenType.OPEN_BRACKETS)
-                //    break;
-            }
-            return result;
-        }
 
         /// <summary>
-        /// list: LBRACKET (expr COMMA)* RBRACKET
+        /// list: LBRACKET (disjunction (COMMA disjunction)*)* RBRACKET
         /// </summary>
         private IExpression @List()
         {
@@ -79,11 +99,11 @@ namespace PyInterpreter.InterpreterBody
             // empty list
             if (_currentToken.Type != TokenType.CLOSE_BRACKETS)
             {
-                items.Add(Expr());
+                items.Add(Disjunction());
                 while (_currentToken.Type == TokenType.COMMA)
                 {
                     Eat(TokenType.COMMA);
-                    items.Add(Expr());
+                    items.Add(Disjunction());
                 }
             }
 
@@ -102,19 +122,22 @@ namespace PyInterpreter.InterpreterBody
         }
 
         /// <summary>
-        /// factor: INTEGER_LITERAL
+        /// atom: INTEGER_LITERAL
         ///         | FLOAT_LITERAL
         ///         | STRING_LITERAL
-        ///         | LPAREN expr RPAREN
+        ///         | TRUE
+        ///         | FALSE
+        ///         | LPAREN disjunction RPAREN
         ///         | variable
         ///         | list
         /// </summary>
-        private IExpression Factor()
+        private IExpression Atom()
         {
             var token = _currentToken;
             IExpression result = null;
             switch (token.Type)
             {
+
                 case TokenType.INTEGER_LITERAL:
                     Eat(TokenType.INTEGER_LITERAL);
                     result = new LiteralExpr(token);
@@ -130,30 +153,28 @@ namespace PyInterpreter.InterpreterBody
                     result = new LiteralExpr(token);
                     break;
 
+                case TokenType.TRUE:
+                    Eat(TokenType.TRUE);
+                    result = new LiteralExpr(token);
+                    break;
+
+                case TokenType.FALSE:
+                    Eat(TokenType.FALSE);
+                    result = new LiteralExpr(token);
+                    break;
+
                 case TokenType.OPEN_PARANTHESIS:
                     Eat(TokenType.OPEN_PARANTHESIS);
-                    result = Expr();
+                    result = Disjunction();
                     Eat(TokenType.CLOSE_PARANTHESIS);
                     break;
 
-                //case TokenType.PLUS:
-                //    Eat(TokenType.PLUS);
-                //    result = new PlusExpr(Factor());
-                //    break;
-
-                //case TokenType.MINUS:
-                //    Eat(TokenType.MINUS);
-                //    result = new MinusExpr(Factor());
-                //    break;
-
                 case TokenType.ID:
                     result = Variable();
-
                     break;
 
                 case TokenType.OPEN_BRACKETS:
                     result = List();
-
                     break;
 
                 default:
@@ -164,13 +185,78 @@ namespace PyInterpreter.InterpreterBody
         }
 
         /// <summary>
+        /// primary: atom (LBRACKET disjunction RBRACKET)*
+        ///          | LPAREN (disjunction (COMMA disjunction)*)? RPAREN
+        /// </summary>
+        private IExpression Primary()
+        {
+            var result = Atom();
+
+            switch (_currentToken.Type)
+            {
+                case TokenType.OPEN_BRACKETS:
+                    while (_currentToken.Type == TokenType.OPEN_BRACKETS)
+                    {
+                        Eat(TokenType.OPEN_BRACKETS);
+                        result = new IndexExpr(result, Disjunction());
+                        Eat(TokenType.CLOSE_BRACKETS);
+                    }
+                    break;
+
+                case TokenType.OPEN_PARANTHESIS:
+                    Eat(TokenType.OPEN_PARANTHESIS);
+                    List<IExpression> args = new List<IExpression>();
+                    if (_currentToken.Type != TokenType.CLOSE_PARANTHESIS)
+                    {
+                        args.Add(Disjunction());
+                        while (_currentToken.Type == TokenType.COMMA)
+                        {
+                            Eat(TokenType.COMMA);
+                            args.Add(Disjunction());
+                        }
+                    }
+
+                    Eat(TokenType.CLOSE_PARANTHESIS);
+                    result =  new FunctionExpr(result, args);
+                    break;
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// factor: PLUS factor
+        ///         | MINUS factor
+        ///         | primary
+        /// </summary>
+        private IExpression Factor()
+        {
+            var token = _currentToken;
+            //IExpression result = null;
+            switch (token.Type)
+            {
+                case TokenType.PLUS:
+                    Eat(TokenType.PLUS);
+                    return new PlusExpr(Factor());
+
+                case TokenType.MINUS:
+                    Eat(TokenType.MINUS);
+                    return new MinusExpr(Factor());
+
+                default:
+                    return Primary();
+            }
+           // return result;
+        }
+
+        /// <summary>
         /// term: factor ((MUL | DIV) factor)*
         /// </summary>
         private IExpression Term()
         {
             TokenType[] operations = { TokenType.MUL, TokenType.DIV };
 
-            var result = Index();
+            var result = Factor();
             while (operations.Contains(_currentToken.Type))
             {
                 var token = _currentToken;
@@ -187,6 +273,30 @@ namespace PyInterpreter.InterpreterBody
                     //result /= Factor();
                 }
 
+            }
+
+            return result;
+        }
+
+        /// expr: term ((PLUS | MINUS) term)*
+        private IExpression Expr()
+        {
+            TokenType[] operations = { TokenType.PLUS, TokenType.MINUS };
+
+            var result = Term();
+            while (operations.Contains(_currentToken.Type))
+            {
+                var token = _currentToken;
+                if (token.Type == TokenType.PLUS)
+                {
+                    Eat(TokenType.PLUS);
+                    result = new AddExpr(result, Term());
+                }
+                else if (token.Type == TokenType.MINUS)
+                {
+                    Eat(TokenType.MINUS);
+                    result = new SubExpr(result, Term());
+                }
             }
 
             return result;
@@ -246,56 +356,25 @@ namespace PyInterpreter.InterpreterBody
             return result;
         }
 
-        /// <summary>
-        /// Arithmetic expression parser.
-        /// Rules:
-        /// program: statement_list
-        /// compound_statement: if_statement
-        /// if_statement: IF compr COLON statement_list 
-        ///               (ELIF compr COLON statement_list)*
-        ///               (ELSE compr COLON statement_list)*
-        /// statement_list: statement | statement NEWLINE statement_list
-        /// statement: compound_statement | assignment_statement | empty
-        /// assignment_statement: variable ASSIGN compr
-        /// empty:
-        /// compr: expr ((EQUAL 
-        ///               | NOT_EQUAL
-        ///               | GREATER
-        ///               | LESSER
-        ///               | GREATER_EQUAL
-        ///               | LESSER_EQUAL) expr)*
-        /// expr: term ((PLUS | MINUS) term)*
-        /// term: index ((MUL | DIV) index)*
-        /// index: PLUS index
-        ///        | MINUS index
-        ///        | factor (LBRACKET expr RBRACKET)*
-        /// factor: INTEGER_LITERAL
-        ///         | FLOAT_LITERAL
-        ///         | STRING_LITERAL
-        ///         | LPAREN expr RPAREN
-        ///         | variable
-        ///         | list
-        /// variable: ID
-        /// list: LBRACKET (expr COMMA)* RBRACKET
-        /// </summary>
-        private IExpression Expr()
+        private IExpression Conjuction()
         {
-            TokenType[] operations = { TokenType.PLUS, TokenType.MINUS };
-
-            var result = Term();
-            while (operations.Contains(_currentToken.Type))
+            var result = Compr();
+            while (_currentToken.Type == TokenType.AND)
             {
-                var token = _currentToken;
-                if (token.Type == TokenType.PLUS)
-                {
-                    Eat(TokenType.PLUS);
-                    result = new AddExpr(result, Term());
-                }
-                else if (token.Type == TokenType.MINUS)
-                {
-                    Eat(TokenType.MINUS);
-                    result = new SubExpr(result, Term());
-                }
+                Eat(TokenType.AND);
+                result = new AndExpr(result, Compr());
+            }
+
+            return result;
+        }
+
+        private IExpression Disjunction()
+        {
+            var result = Conjuction();
+            while (_currentToken.Type == TokenType.OR)
+            {
+                Eat(TokenType.OR);
+                result = new OrExpr(result, Conjuction());
             }
 
             return result;
@@ -304,36 +383,71 @@ namespace PyInterpreter.InterpreterBody
         /// <summary>
         /// empty:
         /// </summary>
-        /// <returns></returns>
-
         private IExpression Empty()
         {
             return new EmptyExpr();
         }
 
         /// <summary>
-        /// assignment_statement: variable ASSIGN compr
+        /// function_call: ID LPAREN (disjunction (COMMA disjunction)*)? RPAREN
+        /// </summary>
+        private IExpression FunctionCall()
+        {
+            var token = _currentToken;
+            var name = Variable();
+
+            // Eat(TokenType.ID);
+            Eat(TokenType.OPEN_PARANTHESIS);
+            
+            List<IExpression> args = new List<IExpression>();
+            if (_currentToken.Type != TokenType.CLOSE_PARANTHESIS)
+            {
+                args.Add(Disjunction());
+                while (_currentToken.Type == TokenType.COMMA)
+                {
+                    Eat(TokenType.COMMA);
+                    args.Add(Disjunction());
+                }
+            }
+
+            Eat(TokenType.CLOSE_PARANTHESIS);
+            return new FunctionExpr(name, args);
+
+        }
+
+        /// <summary>
+        /// assignment_statement: disjunction ASSIGN disjunction
         /// </summary>
         private IExpression AssignmentStatement()
         {
             var token = _currentToken;
-            var name = Variable();
+            var left = Disjunction();
+            
             Eat(TokenType.ASSIGN);
-            var expr = Compr();
-            return new AssignExpr(name, expr, SymbolTable);
+            var expr = Disjunction();
+            return new AssignExpr(left, expr);
         }
 
         /// <summary>
-        /// statement: assignment_statement | empty
+        /// statement: function_call
+        ///            | assignment_statement 
+        ///            | empty
         /// </summary>
         private IExpression Statement()
         {
             IExpression result = null;
-            if (_currentToken.Type == TokenType.ID)
+            if (_currentToken.Type == TokenType.ID
+                && _tokenizer.CurrentChar == '(')
+            {
+                result = FunctionCall();
+            }
+            else if (_currentToken.Type == TokenType.ID)
             {
                 result = AssignmentStatement();
             }
-            else if (_currentToken.Type == TokenType.IF)
+            else if (_currentToken.Type == TokenType.IF
+                     || _currentToken.Type == TokenType.FOR
+                     || _currentToken.Type == TokenType.WHILE)
             {
                 result = CompoundStatement();
             }
@@ -348,7 +462,7 @@ namespace PyInterpreter.InterpreterBody
         }
 
         /// <summary>
-        /// statement_list: statement | statement NEWLINE statement_list
+        /// statement_list: (statement NEWLINE)+ | statement EOF
         /// </summary>
         private IExpression StatementList()
         {
@@ -359,11 +473,6 @@ namespace PyInterpreter.InterpreterBody
                    && _tokenizer.IndentLevel == _indents.Peek())/*(_currentToken.Type == TokenType.ENDLINE)*/
             {
                 Eat(TokenType.ENDLINE);
-                //if (_currentToken.Type == TokenType.ELIF
-                //    || _currentToken.Type == TokenType.ELSE)
-                //{
-                //    return new StatementListExpr(results);
-                //}
                 // TODO: u can exit here if EOF 
                 results.Add(Statement());
             }
@@ -380,14 +489,13 @@ namespace PyInterpreter.InterpreterBody
         /// <summary>
         /// block: NEWLINE INDENT statement_list DEDENT
         /// </summary>
-        /// <returns></returns>
         private IExpression Block()
         {
             var indentLvl = _tokenizer.IndentLevel;
             Eat(TokenType.ENDLINE);
 
             // INDENT
-            if (indentLvl == _tokenizer.IndentLevel)
+            if (_indents.Peek() == _tokenizer.IndentLevel)
                 Error("Expected an indented block");
 
             _indents.Push(_tokenizer.IndentLevel);
@@ -396,7 +504,7 @@ namespace PyInterpreter.InterpreterBody
             if (_indents.Peek() < _tokenizer.IndentLevel)
                 Error("Unexpected indent");
 
-            while (_indents.Peek() > _tokenizer.IndentLevel)
+            while (_indents.Peek() > indentLvl)
                 _indents.Pop();
 
             return statements;
@@ -404,11 +512,10 @@ namespace PyInterpreter.InterpreterBody
         }
 
         /// <summary>
-        /// if_statement: IF compr COLON NEWLINE statement_list 
-        ///               (ELIF compr COLON NEWLINE statement_list)*
-        ///               (ELSE COLON NEWLINE statement_list)*
+        /// if_statement: IF disjunction COLON block_statement 
+        ///               (ELIF disjunction COLON block_statement)*
+        ///               (ELSE COLON block_statement)*
         /// </summary>
-        /// <returns></returns>
         private IExpression IfStatement()
         {
             List<IExpression> comprs = new List<IExpression>();
@@ -416,19 +523,17 @@ namespace PyInterpreter.InterpreterBody
             void ifBlock()
             {
                 Eat(TokenType.COLON);
-                //Eat(TokenType.ENDLINE);
-                //statements.Add(StatementList());
                 statements.Add(Block());
             }
 
             Eat(TokenType.IF);
-            comprs.Add(Compr());
+            comprs.Add(Disjunction());
             ifBlock();
 
             while (_currentToken.Type == TokenType.ELIF)
             {
                 Eat(TokenType.ELIF);
-                comprs.Add(Compr());
+                comprs.Add(Disjunction());
                 ifBlock();
             }
 
@@ -441,13 +546,55 @@ namespace PyInterpreter.InterpreterBody
             return new IfExpr(comprs, statements);
         }
 
+        /// <summary>
+        /// for_statement: FOR variable IN disjunction COLON block
+        /// </summary>
+        private IExpression ForStatement()
+        {
+            Eat(TokenType.FOR);
+            var name = Variable();
+            Eat(TokenType.IN);
+            var iterable = Disjunction();
+            Eat(TokenType.COLON);
+            var statements = Block();
+
+            return new ForExpr(name, iterable, statements);
+        }
+
+        /// <summary>
+        /// while_statement: WHILE compr COLON block
+        /// </summary>
+        private IExpression WhileStatement()
+        {
+            Eat(TokenType.WHILE);
+            var condition = Disjunction();
+            Eat(TokenType.COLON);
+            var statements = Block();
+
+            return new WhileExpr(condition, statements);
+        }
+
+        /// <summary>
+        /// compound_statement: if_statement
+        ///                     | for_statement
+        ///                     | while_statement
+        /// </summary>
         private IExpression CompoundStatement()
         {
             IExpression result = null;
+
             switch (_currentToken.Type)
             {
                 case TokenType.IF:
-                    result =  IfStatement();
+                    result = IfStatement();
+                    break;
+
+                case TokenType.FOR:
+                    result = ForStatement();
+                    break;
+
+                case TokenType.WHILE:
+                    result = WhileStatement();
                     break;
             }
 
@@ -465,11 +612,6 @@ namespace PyInterpreter.InterpreterBody
 
             if (_indents.Peek() != _tokenizer.IndentLevel)
                 Error("Unexpected indent");
-            //if (_currentToken.Type == TokenType.ELIF
-            //    || _currentToken.Type == TokenType.ELSE)
-            //{
-            //    Error("Closest 'if' wasn't found");
-            //}
 
             return new ProgramExpr(statements);
         }

@@ -28,12 +28,53 @@ namespace PyInterpreter.InterpreterBody
                 case TokenType.FLOAT_LITERAL:
                     Literals.TryAdd(token.Value, "literal of \"float\" type");
                     break;
+
+                case TokenType.STRING_LITERAL:
+                    Literals.TryAdd(token.Value, "literal of \"string\" type");
+                    break;
+
+                case TokenType.TRUE:
+                    Literals.TryAdd(token.Value, "literal of \"bool\" type");
+                    break;
+
+                case TokenType.FALSE:
+                    Literals.TryAdd(token.Value, "literal of \"bool\" type");
+                    break;
+
+                case TokenType.NONE:
+                    Literals.TryAdd(token.Value, "literal of \"NoneType\" type");
+                    break;
             }
         }
 
         public void AddKeyword(Token token)
         {
+            switch (token.Type)
+            {
+                case TokenType.IF:
+                    KeyWords.TryAdd(token.Value, "control keyword");
+                    break;
 
+                case TokenType.ELIF:
+                    KeyWords.TryAdd(token.Value, "control keyword");
+                    break;
+
+                case TokenType.ELSE:
+                    KeyWords.TryAdd(token.Value, "control keyword");
+                    break;
+
+                case TokenType.FOR:
+                    KeyWords.TryAdd(token.Value, "loop keyword");
+                    break;
+
+                case TokenType.WHILE:
+                    KeyWords.TryAdd(token.Value, "loop keyword");
+                    break;
+
+                case TokenType.IN:
+                    KeyWords.TryAdd(token.Value, "loop keyword");
+                    break;
+            }
         }
 
         public void AddOperator(Token token)
@@ -47,6 +88,12 @@ namespace PyInterpreter.InterpreterBody
                 case TokenType.OPEN_PARANTHESIS:
                 case TokenType.CLOSE_PARANTHESIS:
                 case TokenType.ASSIGN:
+                case TokenType.EQUAL:
+                case TokenType.NOT_EQUAL:
+                case TokenType.GREATER:
+                case TokenType.GREATER_EQUAL:
+                case TokenType.LESSER:
+                case TokenType.LESSER_EQUAL:
                     Operators.TryAdd(token.Value, "arithmetic operator");
                     break;
             }
@@ -106,6 +153,8 @@ namespace PyInterpreter.InterpreterBody
 
         private char _currentChar;
 
+        public char CurrentChar { get => _currentChar; }
+
         private LexemTable _lexemTable = new LexemTable();
 
         public int LinePos { get => _linePos; }
@@ -116,8 +165,12 @@ namespace PyInterpreter.InterpreterBody
 
         public Tokenizer(string text)
         {
+            if (string.IsNullOrEmpty(text))
+                Error("There is no program text");
             _text = text;
+
             _currentChar = _text[_pos];
+            SetIdentation();          
         }
 
         public void PrintLexems()
@@ -151,10 +204,14 @@ namespace PyInterpreter.InterpreterBody
             {
                 _lineNumber++;
                 _linePos = 0;
-                SetIdentation();
             }
 
             if (!IsEOF()) _currentChar = _text[_pos];
+            if (_linePos == 0 && _currentChar != '\r' && _currentChar != '\n')
+            {
+                SetIdentation();
+            }
+
         }
             
         private char Peek()
@@ -198,6 +255,13 @@ namespace PyInterpreter.InterpreterBody
             else
                 token = new Token(TokenType.INTEGER_LITERAL, result.ToString());
 
+            // cheat (should be invalid syntax)
+            if (char.IsLetter(_currentChar))
+            {
+                Error("Incorrect variabe name");
+            }
+            //
+
             _lexemTable.AddLiteral(token);
             return token;
         }
@@ -225,7 +289,10 @@ namespace PyInterpreter.InterpreterBody
             if (!isTerminated)
                 Error("EOL while scanning string literal");
 
-            return new Token(TokenType.STRING_LITERAL, result);
+            var token = new Token(TokenType.STRING_LITERAL, result);
+            _lexemTable.AddLiteral(token);
+
+            return token;
         }
 
         private Token GetKeywordOrVariable()
@@ -236,6 +303,29 @@ namespace PyInterpreter.InterpreterBody
                 value += _currentChar;
                 Move();
             }
+
+            if (value == "True" )
+            {
+                var _token = new Token(TokenType.TRUE, value);
+                _lexemTable.AddLiteral(_token);
+                return _token;
+            }
+
+            if (value == "False")
+            {
+                var _token = new Token(TokenType.FALSE, value);
+                _lexemTable.AddLiteral(_token);
+                return _token;
+            }
+
+            if (value == "None")
+            {
+                var _token = new Token(TokenType.NONE, value);
+                _lexemTable.AddLiteral(_token);
+                return _token;
+            }
+
+
 
             var token = new Token(Keywords.GetKeyword(value), value);
             _lexemTable.AddKeyword(token);
@@ -263,22 +353,36 @@ namespace PyInterpreter.InterpreterBody
             if (!lexems.Contains(value))
                 Error($"Expected comparison operator");
 
+            Token token = null;
+
             switch (value)
             {
                 case "==":
-                    return new Token(TokenType.EQUAL, value);
+                    token = new Token(TokenType.EQUAL, value);
+                    _lexemTable.AddOperator(token);
+                    return token;
                 case "!=":
-                    return new Token(TokenType.NOT_EQUAL, value);
+                    token = new Token(TokenType.NOT_EQUAL, value);
+                    _lexemTable.AddOperator(token);
+                    return token;
                 case ">":
-                    return new Token(TokenType.GREATER, value);
+                    token = new Token(TokenType.GREATER, value);
+                    _lexemTable.AddOperator(token);
+                    return token;
                 case "<":
-                    return new Token(TokenType.LESSER, value);
+                    token = new Token(TokenType.LESSER, value);
+                    _lexemTable.AddOperator(token);
+                    return token;
                 case ">=":
-                    return new Token(TokenType.GREATER_EQUAL, value);
+                    token = new Token(TokenType.GREATER_EQUAL, value);
+                    _lexemTable.AddOperator(token);
+                    return token;
                 case "<=":
-                        return new Token(TokenType.LESSER_EQUAL, value);
+                    token = new Token(TokenType.LESSER_EQUAL, value);
+                    _lexemTable.AddOperator(token);
+                    return token;
                 default:
-                    return null;
+                    return token;
             }
         }
 
@@ -290,20 +394,12 @@ namespace PyInterpreter.InterpreterBody
                 _indentLevel++;
                 Move();
             }
-
-
         }
 
         public Token GetNextToken()
-        {          
-            while(!IsEOF())
+        {
+            while (!IsEOF())
             {
-                if(_linePos == 0)
-                {
-                    SetIdentation();
-                    //continue;
-                }
-
                 if (_currentChar == '\n')
                 {
                     Move();
