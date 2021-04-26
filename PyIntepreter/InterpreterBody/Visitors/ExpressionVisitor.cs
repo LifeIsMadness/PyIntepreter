@@ -303,7 +303,14 @@ namespace PyInterpreter.InterpreterBody.Visitors
         public void VisitVariableExpr(VariableExpr expr)
         {
             string varName = expr.Eval().Value;
-            Result = SymbolTable.GetVariable(varName).Value;
+            try
+            {
+                Result = SymbolTable.GetVariable(varName).Value;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Name {varName} is not defined");
+            }
         }
 
         public void VisitAssignExpr(AssignExpr expr)

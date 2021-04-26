@@ -13,10 +13,11 @@ namespace PyInterpreter.InterpreterBody.Results
 
         public override IResult Add(IResult right)
         {
-            if (right is ListResult)
-            {
-                return new ListResult(Value.AddRange(right.Value));
-            }
+            //if (right is ListResult)
+            //{
+            //    Value.Add(right);
+            //    return this;
+            //}
             Value.Add(right);
             return this;
         }

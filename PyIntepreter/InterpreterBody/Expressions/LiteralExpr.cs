@@ -22,6 +22,7 @@ namespace PyInterpreter.InterpreterBody.Expressions
             visitor.VisitNumberExpr(this);
         }
 
+        public int LineNumber { get; set; }
         public IResult Eval()
         {
             if (_token.Type == TokenType.INTEGER_LITERAL)

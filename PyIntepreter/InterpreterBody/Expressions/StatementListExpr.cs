@@ -14,6 +14,8 @@ namespace PyInterpreter.InterpreterBody.Expressions
             Statements = statements;
         }
 
+        public int LineNumber { get; set; }
+
         public void Accept(IVisitor expressionVisitor)
         {
             expressionVisitor.VisitStatementListExpr(this);

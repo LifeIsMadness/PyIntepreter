@@ -1,4 +1,5 @@
 ﻿using PyInterpreter.InterpreterBody;
+using PyInterpreter.InterpreterBody.Results;
 using PyInterpreter.InterpreterBody.SymbTable;
 using PyInterpreter.InterpreterBody.Visitors;
 using System;
@@ -7,6 +8,17 @@ using System.IO;
 
 namespace PyInterpreter
 {
+
+    class A
+    {
+        public static A operator +(A a, A b) => new A();
+    }
+
+    class B
+    {
+        public static B operator +(B a, B b) => new B();
+    }
+
     class Program
     {   
         static void PrintTable(Interpreter interpreter)
@@ -18,16 +30,11 @@ namespace PyInterpreter
 
                 if (pair.Value.Type == "list")
                 {
-                    //Console.WriteLine();
                     Console.Write($"{pair.Key}" +
-                    $"\t{pair.Value.Type}");
-                    Console.Write("\t[");
-                    foreach (var item in pair.Value.Value.Value)
-                    {
-                        Console.Write($"{item.Value}, ");
-                    }
-                    Console.Write(']');
+                        $"\t{pair.Value.Type}\t");
+                    PrintList(pair.Value.Value.Value);
                     Console.WriteLine();
+ 
                     continue;
                 }
                 Console.WriteLine($"{pair.Key}" +
@@ -42,6 +49,19 @@ namespace PyInterpreter
                 Console.WriteLine($"{pair.Key}" +
                     "\tbuiltin_function");
             }
+        }
+
+        public static void PrintList(IList<IResult> list)
+        {
+            Console.Write("[");
+            foreach (var item in list)
+            {
+                if (item is ListResult)
+                    PrintList(item.Value);
+                else   
+                    Console.Write($"{item.Value}, ");
+            }
+            Console.Write(']');
         }
 
         static void Main(string[] args)
@@ -80,10 +100,11 @@ namespace PyInterpreter
 
                 var result = interpreter.Interpret();
 
-                PrintTable(interpreter);
+                //PrintTable(interpreter);
             }
             catch (Exception ex)
             {
+                //Console.WriteLine(ex.StackTrace);
                 Console.WriteLine(ex.Message);
             }
 

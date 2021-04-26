@@ -13,6 +13,7 @@ namespace PyInterpreter.InterpreterBody.Expressions.Builtins
 
         public IList<IResult> Args { get; set; }
 
+        public int LineNumber { get; set; }
         public virtual void Accept(IVisitor expressionVisitor)
         {
             throw new NotImplementedException();

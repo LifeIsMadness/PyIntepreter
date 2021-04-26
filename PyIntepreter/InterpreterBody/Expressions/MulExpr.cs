@@ -22,6 +22,8 @@ namespace PyInterpreter.InterpreterBody.Expressions
             visitor.VisitMulExpr(this);
         }
 
+        public int LineNumber { get; set; }
+
         public IResult Eval(IResult left, IResult right)
         {
             return left.Mul(right);

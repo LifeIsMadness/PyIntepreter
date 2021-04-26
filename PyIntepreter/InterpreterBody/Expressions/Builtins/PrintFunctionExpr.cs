@@ -27,12 +27,14 @@ namespace PyInterpreter.InterpreterBody.Expressions.Builtins
 
             if (Args[0] is ListResult)
             {
-                Console.Write('[');
-                foreach (var item in Args[0].Value)
-                {
-                    Console.Write($"{item.Value}, ");
-                }
-                Console.Write("]\n");
+                Program.PrintList(Args[0].Value);
+                //Console.Write('[');
+                //foreach (var item in Args[0].Value)
+                //{
+                //    Console.Write($"{item.Value}, ");
+                //}
+                //Console.Write("]\n");
+                Console.WriteLine();
             }
             else
                 Console.WriteLine(Args[0].Value);

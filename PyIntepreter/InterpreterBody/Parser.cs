@@ -19,6 +19,7 @@ namespace PyInterpreter.InterpreterBody
     ///               (ELSE COLON block)*
     /// for_statement: FOR variable IN disjunction COLON block
     /// while_statement: WHILE disjunction COLON block
+    /// block: NEWLINE INDENT statement_list DEDENT
     /// statement_list: (statement NEWLINE)+ | statement EOF
     /// statement: compound_statement 
     ///            | assignment_statement
@@ -49,7 +50,7 @@ namespace PyInterpreter.InterpreterBody
     ///         | variable
     ///         | list
     /// variable: ID
-    /// list: LBRACKET (disjunction (COMMA disjunction)*)* RBRACKET
+    /// list: LBRACKET (disjunction (COMMA disjunction)*)? RBRACKET
     /// </summary>
     public class Parser
     {
@@ -89,7 +90,7 @@ namespace PyInterpreter.InterpreterBody
 
 
         /// <summary>
-        /// list: LBRACKET (disjunction (COMMA disjunction)*)* RBRACKET
+        /// list: LBRACKET (disjunction (COMMA disjunction)*)? RBRACKET
         /// </summary>
         private IExpression @List()
         {
@@ -106,8 +107,14 @@ namespace PyInterpreter.InterpreterBody
                     items.Add(Disjunction());
                 }
             }
-
-            Eat(TokenType.CLOSE_BRACKETS);
+            try
+            {
+                Eat(TokenType.CLOSE_BRACKETS);
+            }
+            catch(Exception ex) 
+            {
+                Error("List should ends with ']'");
+            }
             return new ListExpr(items);
         }
 
@@ -398,7 +405,7 @@ namespace PyInterpreter.InterpreterBody
 
             // Eat(TokenType.ID);
             Eat(TokenType.OPEN_PARANTHESIS);
-            
+
             List<IExpression> args = new List<IExpression>();
             if (_currentToken.Type != TokenType.CLOSE_PARANTHESIS)
             {
@@ -410,7 +417,16 @@ namespace PyInterpreter.InterpreterBody
                 }
             }
 
-            Eat(TokenType.CLOSE_PARANTHESIS);
+            try
+            {
+                Eat(TokenType.CLOSE_PARANTHESIS);
+            }
+            catch (Exception ex)
+            {
+                Error("Expecting ')' at the end of a function call");
+                
+            }
+
             return new FunctionExpr(name, args);
 
         }
@@ -456,7 +472,7 @@ namespace PyInterpreter.InterpreterBody
             {
                 result = Empty();
             }
-            else Error("Expected statement(assign, blank line)");
+            else Error("Expected statement(assign, compound, blank line)");
 
             return result;
         }
@@ -491,20 +507,21 @@ namespace PyInterpreter.InterpreterBody
         /// </summary>
         private IExpression Block()
         {
-            var indentLvl = _tokenizer.IndentLevel;
+            var outerIndent = _tokenizer.PrevIndentLevel;
+            var innerIndent = _tokenizer.IndentLevel;
             Eat(TokenType.ENDLINE);
-
+            
             // INDENT
-            if (_indents.Peek() == _tokenizer.IndentLevel)
+            if (_indents.Peek() == innerIndent)
                 Error("Expected an indented block");
 
-            _indents.Push(_tokenizer.IndentLevel);
+            _indents.Push(innerIndent);
 
             var statements = StatementList();
-            if (_indents.Peek() < _tokenizer.IndentLevel)
+            if (_indents.Peek() < _tokenizer.IndentLevel && _currentToken.Type != TokenType.EOF)
                 Error("Unexpected indent");
 
-            while (_indents.Peek() > indentLvl)
+            while (_indents.Peek() > outerIndent)
                 _indents.Pop();
 
             return statements;
@@ -610,7 +627,8 @@ namespace PyInterpreter.InterpreterBody
 
             var statements = StatementList();
 
-            if (_indents.Peek() != _tokenizer.IndentLevel)
+            if (_indents.Peek() != _tokenizer.IndentLevel 
+                && _currentToken.Type != TokenType.EOF)
                 Error("Unexpected indent");
 
             return new ProgramExpr(statements);
@@ -619,7 +637,7 @@ namespace PyInterpreter.InterpreterBody
         public IExpression Parse()
         {
             var program = Program();
-            _tokenizer.PrintLexems();
+            //_tokenizer.PrintLexems();
             return program;
         }
     }

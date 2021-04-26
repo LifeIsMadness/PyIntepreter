@@ -20,6 +20,8 @@ namespace PyInterpreter.InterpreterBody.Expressions
             expressionVisitor.VisitPlusExpr(this);
         }
 
+        public int LineNumber { get; set; }
+
         public IResult Eval(IResult right)
         {
             return right.Plus();

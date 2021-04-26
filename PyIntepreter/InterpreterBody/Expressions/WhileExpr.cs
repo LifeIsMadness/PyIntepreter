@@ -11,6 +11,7 @@ namespace PyInterpreter.InterpreterBody.Expressions
         public IExpression Condition { get; }
 
         public IExpression Statements { get; }
+        public int LineNumber { get; set; }
 
         public WhileExpr(IExpression condition,
                          IExpression statements)

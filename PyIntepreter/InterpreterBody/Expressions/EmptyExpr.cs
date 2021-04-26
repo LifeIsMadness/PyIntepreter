@@ -13,6 +13,8 @@ namespace PyInterpreter.InterpreterBody.Expressions
             expressionVisitor.VisitEmptyExpr(this); 
         }
 
+        public int LineNumber { get; set; }
+
         public IResult Eval()
         {
             return new NoResult();

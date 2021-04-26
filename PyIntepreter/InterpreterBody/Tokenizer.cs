@@ -161,7 +161,11 @@ namespace PyInterpreter.InterpreterBody
         public int LineNumber { get => _lineNumber; }
 
         private int _indentLevel = 0;
+
+        private int _prevIndent = 0;
+
         public int IndentLevel { get => _indentLevel; }
+        public int PrevIndentLevel { get => _prevIndent; }
 
         public Tokenizer(string text)
         {
@@ -209,6 +213,7 @@ namespace PyInterpreter.InterpreterBody
             if (!IsEOF()) _currentChar = _text[_pos];
             if (_linePos == 0 && _currentChar != '\r' && _currentChar != '\n')
             {
+                _prevIndent = _indentLevel;
                 SetIdentation();
             }
 
@@ -388,6 +393,7 @@ namespace PyInterpreter.InterpreterBody
 
         private void SetIdentation()
         {
+            //_indentLevel = _nextIndent;
             _indentLevel = 0;
             while(_currentChar == '\t')
             {

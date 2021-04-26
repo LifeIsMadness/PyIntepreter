@@ -20,6 +20,7 @@ namespace PyInterpreter.InterpreterBody.Expressions
             expressionVisitor.VisitMinusExpr(this);
         }
 
+        public int LineNumber { get; set; }
         public IResult Eval(IResult right)
         {
             return right.Minus();

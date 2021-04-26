@@ -16,6 +16,8 @@ namespace PyInterpreter.InterpreterBody.Expressions
             _name = name;
         }
 
+        public int LineNumber { get; set; }
+
         public void Accept(IVisitor expressionVisitor)
         {
             expressionVisitor.VisitVariableExpr(this);

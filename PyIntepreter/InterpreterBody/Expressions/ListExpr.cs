@@ -20,6 +20,7 @@ namespace PyInterpreter.InterpreterBody.Expressions
             expressionVisitor.VisitListExpr(this);
         }
 
+        public int LineNumber { get; set; }
         public IResult Eval(List<IResult> items)
         {
             return new ListResult(items);

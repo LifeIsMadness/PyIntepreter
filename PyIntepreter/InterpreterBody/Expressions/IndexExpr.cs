@@ -23,6 +23,7 @@ namespace PyInterpreter.InterpreterBody.Expressions
             expressionVisitor.VisitIndexExpr(this);
         }
 
+        public int LineNumber { get; set; }
         public IResult Eval(IResult list, IResult index)
         {
             return list.Value[index.Value];

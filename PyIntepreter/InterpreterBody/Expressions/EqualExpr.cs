@@ -19,6 +19,8 @@ namespace PyInterpreter.InterpreterBody.Expressions
             visitor.VisitEqualExpr(this);
         }
 
+        public int LineNumber { get; set; }
+
         public IResult Eval(IResult left, IResult right)
         {
             return left.Equal(right);

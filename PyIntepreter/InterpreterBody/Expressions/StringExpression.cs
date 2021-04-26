@@ -15,6 +15,8 @@ namespace PyInterpreter.InterpreterBody.Expressions
             _val = val;
         }
 
+        public int LineNumber { get; set; }
+
         public void Accept(IVisitor expressionVisitor)
         {
             throw new NotImplementedException();

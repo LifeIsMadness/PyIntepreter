@@ -22,6 +22,7 @@ namespace PyInterpreter.InterpreterBody.Expressions
         {
             visitor.VisitAddExpr(this);
         }
+        public int LineNumber { get; set; }
 
         public IResult Eval(IResult left, IResult right)
         {

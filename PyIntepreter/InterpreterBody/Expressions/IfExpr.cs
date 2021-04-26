@@ -23,6 +23,7 @@ namespace PyInterpreter.InterpreterBody.Expressions
             expressionVisitor.VisitIfExpr(this);
         }
 
+        public int LineNumber { get; set; }
         public IExpression Eval(List<IResult> conditions)
         {
             int i = 0;
