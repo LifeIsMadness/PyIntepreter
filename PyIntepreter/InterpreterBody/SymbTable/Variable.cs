@@ -17,30 +17,7 @@ namespace PyInterpreter.InterpreterBody.SymbTable
         {
             Name = name;
             Value = value;
-            if (Value.GetType() == typeof(IntResult))
-            {
-                Type = "int";
-            }
-            else if (Value.GetType() == typeof(FloatResult))
-            {
-                Type = "float";
-            }
-            else if (Value.GetType() == typeof(BoolResult))
-            {
-                Type = "bool";   
-            }
-            else if (Value.GetType() == typeof(StringResult))
-            {
-                Type = "string";
-            }
-            else if (Value.GetType() == typeof(NoResult))
-            {
-                Type = "NoneType";
-            }
-            else
-            {
-                Type = "list";
-            }
+            Type = ((Result)value).PythonTypeName;
         }
     }
 }

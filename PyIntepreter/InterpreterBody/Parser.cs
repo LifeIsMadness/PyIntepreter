@@ -115,7 +115,7 @@ namespace PyInterpreter.InterpreterBody
             {
                 Error("List should ends with ']'");
             }
-            return new ListExpr(items);
+            return new ListExpr(items) {LineNumber = _tokenizer.LineNumber};
         }
 
         /// <summary>
@@ -123,7 +123,7 @@ namespace PyInterpreter.InterpreterBody
         /// </summary>
         private IExpression Variable()
         {
-            IExpression result = new VariableExpr(_currentToken.Value);
+            IExpression result = new VariableExpr(_currentToken.Value) {LineNumber = _tokenizer.LineNumber};
             Eat(TokenType.ID);
             return result;
         }
@@ -147,27 +147,27 @@ namespace PyInterpreter.InterpreterBody
 
                 case TokenType.INTEGER_LITERAL:
                     Eat(TokenType.INTEGER_LITERAL);
-                    result = new LiteralExpr(token);
+                    result = new LiteralExpr(token) {LineNumber = _tokenizer.LineNumber};
                     break;
 
                 case TokenType.FLOAT_LITERAL:
                     Eat(TokenType.FLOAT_LITERAL);
-                    result = new LiteralExpr(token);
+                    result = new LiteralExpr(token) {LineNumber = _tokenizer.LineNumber};
                     break;
 
                 case TokenType.STRING_LITERAL:
                     Eat(TokenType.STRING_LITERAL);
-                    result = new LiteralExpr(token);
+                    result = new LiteralExpr(token) {LineNumber = _tokenizer.LineNumber};
                     break;
 
                 case TokenType.TRUE:
                     Eat(TokenType.TRUE);
-                    result = new LiteralExpr(token);
+                    result = new LiteralExpr(token) {LineNumber = _tokenizer.LineNumber};
                     break;
 
                 case TokenType.FALSE:
                     Eat(TokenType.FALSE);
-                    result = new LiteralExpr(token);
+                    result = new LiteralExpr(token) {LineNumber = _tokenizer.LineNumber};
                     break;
 
                 case TokenType.OPEN_PARANTHESIS:
@@ -205,7 +205,7 @@ namespace PyInterpreter.InterpreterBody
                     while (_currentToken.Type == TokenType.OPEN_BRACKETS)
                     {
                         Eat(TokenType.OPEN_BRACKETS);
-                        result = new IndexExpr(result, Disjunction());
+                        result = new IndexExpr(result, Disjunction()) {LineNumber = _tokenizer.LineNumber};
                         Eat(TokenType.CLOSE_BRACKETS);
                     }
                     break;
@@ -224,7 +224,7 @@ namespace PyInterpreter.InterpreterBody
                     }
 
                     Eat(TokenType.CLOSE_PARANTHESIS);
-                    result =  new FunctionExpr(result, args);
+                    result =  new FunctionExpr(result, args) {LineNumber = _tokenizer.LineNumber};
                     break;
             }
 
@@ -244,11 +244,11 @@ namespace PyInterpreter.InterpreterBody
             {
                 case TokenType.PLUS:
                     Eat(TokenType.PLUS);
-                    return new PlusExpr(Factor());
+                    return new PlusExpr(Factor()) {LineNumber = _tokenizer.LineNumber};
 
                 case TokenType.MINUS:
                     Eat(TokenType.MINUS);
-                    return new MinusExpr(Factor());
+                    return new MinusExpr(Factor()) {LineNumber = _tokenizer.LineNumber};
 
                 default:
                     return Primary();
@@ -271,12 +271,12 @@ namespace PyInterpreter.InterpreterBody
                 {
                     Eat(TokenType.MUL);
                     //result *= Factor();
-                    result = new MulExpr(result, Factor());
+                    result = new MulExpr(result, Factor()) {LineNumber = _tokenizer.LineNumber};
                 }
                 else if (token.Type == TokenType.DIV)
                 {
                     Eat(TokenType.DIV);
-                    result = new DivExpr(result, Factor());
+                    result = new DivExpr(result, Factor()) {LineNumber = _tokenizer.LineNumber};
                     //result /= Factor();
                 }
 
@@ -297,12 +297,12 @@ namespace PyInterpreter.InterpreterBody
                 if (token.Type == TokenType.PLUS)
                 {
                     Eat(TokenType.PLUS);
-                    result = new AddExpr(result, Term());
+                    result = new AddExpr(result, Term()) {LineNumber = _tokenizer.LineNumber};
                 }
                 else if (token.Type == TokenType.MINUS)
                 {
                     Eat(TokenType.MINUS);
-                    result = new SubExpr(result, Term());
+                    result = new SubExpr(result, Term()) {LineNumber = _tokenizer.LineNumber};
                 }
             }
 
@@ -332,32 +332,32 @@ namespace PyInterpreter.InterpreterBody
                 if (token.Type == TokenType.EQUAL)
                 {
                     Eat(TokenType.EQUAL);
-                    result = new EqualExpr(result, Expr());
+                    result = new EqualExpr(result, Expr()) {LineNumber = _tokenizer.LineNumber};
                 }
                 else if (token.Type == TokenType.NOT_EQUAL)
                 {
                     Eat(TokenType.NOT_EQUAL);
-                    result = new NotEqualExpr(result, Expr());
+                    result = new NotEqualExpr(result, Expr()) {LineNumber = _tokenizer.LineNumber};
                 }
                 else if (token.Type == TokenType.GREATER)
                 {
                     Eat(TokenType.GREATER);
-                    result = new GreaterExpr(result, Expr());
+                    result = new GreaterExpr(result, Expr()) {LineNumber = _tokenizer.LineNumber};
                 }
                 else if (token.Type == TokenType.LESSER)
                 {
                     Eat(TokenType.LESSER);
-                    result = new LesserExpr(result, Expr());
+                    result = new LesserExpr(result, Expr()) {LineNumber = _tokenizer.LineNumber};
                 }
                 else if (token.Type == TokenType.GREATER_EQUAL)
                 {
                     Eat(TokenType.GREATER_EQUAL);
-                    result = new GreaterEqualExpr(result, Expr());
+                    result = new GreaterEqualExpr(result, Expr()) {LineNumber = _tokenizer.LineNumber};
                 }
                 else if (token.Type == TokenType.LESSER_EQUAL)
                 {
                     Eat(TokenType.LESSER_EQUAL);
-                    result = new LesserEqualExpr(result, Expr());
+                    result = new LesserEqualExpr(result, Expr()) {LineNumber = _tokenizer.LineNumber};
                 }
             }
             return result;
@@ -369,7 +369,7 @@ namespace PyInterpreter.InterpreterBody
             while (_currentToken.Type == TokenType.AND)
             {
                 Eat(TokenType.AND);
-                result = new AndExpr(result, Compr());
+                result = new AndExpr(result, Compr()) {LineNumber = _tokenizer.LineNumber};
             }
 
             return result;
@@ -381,7 +381,7 @@ namespace PyInterpreter.InterpreterBody
             while (_currentToken.Type == TokenType.OR)
             {
                 Eat(TokenType.OR);
-                result = new OrExpr(result, Conjuction());
+                result = new OrExpr(result, Conjuction()) {LineNumber = _tokenizer.LineNumber};
             }
 
             return result;
@@ -427,7 +427,7 @@ namespace PyInterpreter.InterpreterBody
                 
             }
 
-            return new FunctionExpr(name, args);
+            return new FunctionExpr(name, args) {LineNumber = _tokenizer.LineNumber};
 
         }
 
@@ -441,7 +441,7 @@ namespace PyInterpreter.InterpreterBody
             
             Eat(TokenType.ASSIGN);
             var expr = Disjunction();
-            return new AssignExpr(left, expr);
+            return new AssignExpr(left, expr) {LineNumber = _tokenizer.LineNumber};
         }
 
         /// <summary>
@@ -472,7 +472,7 @@ namespace PyInterpreter.InterpreterBody
             {
                 result = Empty();
             }
-            else Error("Expected statement(assign, compound, blank line)");
+            else Error("Expected statement(assign, compound, function call, blank line)");
 
             return result;
         }
@@ -484,12 +484,11 @@ namespace PyInterpreter.InterpreterBody
         {
             var result = Statement();
             List<IExpression> results = new List<IExpression> { result };
-            // TODO: syntax checking
+            
             while (_currentToken.Type == TokenType.ENDLINE 
                    && _tokenizer.IndentLevel == _indents.Peek())/*(_currentToken.Type == TokenType.ENDLINE)*/
             {
                 Eat(TokenType.ENDLINE);
-                // TODO: u can exit here if EOF 
                 results.Add(Statement());
             }
 
@@ -499,7 +498,7 @@ namespace PyInterpreter.InterpreterBody
                 Error("Expected operator");
             }
 
-            return new StatementListExpr(results);
+            return new StatementListExpr(results) {LineNumber = _tokenizer.LineNumber};
         }
 
         /// <summary>
@@ -560,7 +559,7 @@ namespace PyInterpreter.InterpreterBody
                 ifBlock();
             }
 
-            return new IfExpr(comprs, statements);
+            return new IfExpr(comprs, statements) {LineNumber = _tokenizer.LineNumber};
         }
 
         /// <summary>
@@ -575,7 +574,7 @@ namespace PyInterpreter.InterpreterBody
             Eat(TokenType.COLON);
             var statements = Block();
 
-            return new ForExpr(name, iterable, statements);
+            return new ForExpr(name, iterable, statements) {LineNumber = _tokenizer.LineNumber};
         }
 
         /// <summary>
@@ -588,7 +587,7 @@ namespace PyInterpreter.InterpreterBody
             Eat(TokenType.COLON);
             var statements = Block();
 
-            return new WhileExpr(condition, statements);
+            return new WhileExpr(condition, statements) {LineNumber = _tokenizer.LineNumber};
         }
 
         /// <summary>
@@ -631,7 +630,7 @@ namespace PyInterpreter.InterpreterBody
                 && _currentToken.Type != TokenType.EOF)
                 Error("Unexpected indent");
 
-            return new ProgramExpr(statements);
+            return new ProgramExpr(statements) {LineNumber = _tokenizer.LineNumber};
         }
 
         public IExpression Parse()

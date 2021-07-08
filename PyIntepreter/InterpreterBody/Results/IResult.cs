@@ -14,6 +14,8 @@ namespace PyInterpreter.InterpreterBody.Results
         //public void SetValue(dynamic val);
         public dynamic Value { get; set; }
 
+        public string PythonTypeName { get; }
+
         public IResult Plus();
 
         public IResult Minus();

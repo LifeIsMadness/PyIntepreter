@@ -13,6 +13,7 @@ namespace PyInterpreter.InterpreterBody.Results
 
         public FloatResult(double value): base(value)
         {
+            _pythonTypeName = "float";
             //Value = value;
         }
 

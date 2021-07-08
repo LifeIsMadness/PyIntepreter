@@ -18,7 +18,7 @@ namespace PyInterpreter.InterpreterBody.Visitors
 
         public void VisitAndExpr(AndExpr expr)
         {
-            _treeLevel += "_";
+            _treeLevel += "\\";
             var lvl = _treeLevel;
             Console.WriteLine("|" + _treeLevel + "and");
             expr.Left.Accept(this);
@@ -28,7 +28,7 @@ namespace PyInterpreter.InterpreterBody.Visitors
 
         public void VisitOrExpr(OrExpr expr)
         {
-            _treeLevel += "_";
+            _treeLevel += "\\";
             var lvl = _treeLevel;
             Console.WriteLine("|" + _treeLevel + "or");
             expr.Left.Accept(this);
@@ -43,35 +43,35 @@ namespace PyInterpreter.InterpreterBody.Visitors
         // Visit builtin functions.
         public void VisitInputExpr(InputFunctionExpr expr)
         {
-            _treeLevel += "_";
+            _treeLevel += "\\";
             var lvl = _treeLevel;
             Console.WriteLine("|" + _treeLevel + "input");
         }
 
         public void VisitPrintExpr(PrintFunctionExpr expr)
         {
-            _treeLevel += "_";
+            _treeLevel += "\\";
             var lvl = _treeLevel;
             Console.WriteLine("|" + _treeLevel + "print()");
         }
 
         public void VisitRangeExpr(RangeFunctionExpr expr)
         {
-            _treeLevel += "_";
+            _treeLevel += "\\";
             var lvl = _treeLevel;
             Console.WriteLine("|" + _treeLevel + "range()");
         }
 
         public void VisitIntExpr(IntFunctionExpr expr)
         {
-            _treeLevel += "_";
+            _treeLevel += "\\";
             var lvl = _treeLevel;
             Console.WriteLine("|" + _treeLevel + "int()");
         }
 
         public void VisitLenExpr(LenFunctionExpr expr)
         {
-            _treeLevel += "_";
+            _treeLevel += "\\";
             var lvl = _treeLevel;
             Console.WriteLine("|" + _treeLevel + "len()");
         }
@@ -79,7 +79,7 @@ namespace PyInterpreter.InterpreterBody.Visitors
 
         public void VisitEqualExpr(EqualExpr expr)
         {
-            _treeLevel += "_";
+            _treeLevel += "\\";
             var lvl = _treeLevel;
             Console.WriteLine("|" + _treeLevel + "==");
             expr._left.Accept(this);
@@ -91,7 +91,7 @@ namespace PyInterpreter.InterpreterBody.Visitors
         {
             // TODO: if not callable
             var name = ((VariableExpr)expr.Name).Eval().Value;
-            _treeLevel += "_";
+            _treeLevel += "\\";
             var lvl = _treeLevel;
             Console.WriteLine("|" + _treeLevel + "function_call");
             foreach (var arg in expr.Args)
@@ -109,10 +109,11 @@ namespace PyInterpreter.InterpreterBody.Visitors
 
         public void VisitWhileExpr(WhileExpr expr)
         {
-            _treeLevel += "_";
+            _treeLevel += "\\";
             var lvl = _treeLevel;
             Console.WriteLine("|" + _treeLevel + "while");
             expr.Condition.Accept(this);
+            expr.Statements.Accept(this);
         }
 
         public void VisitForExpr(ForExpr expr)
@@ -121,23 +122,20 @@ namespace PyInterpreter.InterpreterBody.Visitors
             // expr.Variable.Accept(this);
             //var name = Result;
             var name = ((VariableExpr)expr.Variable).Eval();
-            _treeLevel += "_";
+            _treeLevel += "\\";
             var lvl = _treeLevel;
             Console.WriteLine("|" + _treeLevel + "for");
             expr.Iterable.Accept(this);
 
-            //foreach (var item in iterable.Value)
-            //{
-            //    var variable = new Variable(name.Value, item);
-            //    SymbolTable.SetVariable(name.Value, variable);
-            //    expr.Statements.Accept(this);
-            //}
+
+            expr.Statements.Accept(this);
+            
         }
 
         public void VisitIfExpr(IfExpr expr)
         {
             //List<IResult> conditions = new List<IResult>();
-            _treeLevel += "_";
+            _treeLevel += "\\";
             var lvl = _treeLevel;
             Console.WriteLine("|" + _treeLevel + "if");
             foreach (var conditionExpr in expr.Conditions)
@@ -152,7 +150,7 @@ namespace PyInterpreter.InterpreterBody.Visitors
 
         public void VisitNotEqualExpr(NotEqualExpr expr)
         {
-            _treeLevel += "_";
+            _treeLevel += "\\";
             var lvl = _treeLevel;
             Console.WriteLine("|" + _treeLevel + "!=");
             expr._left.Accept(this);
@@ -162,7 +160,7 @@ namespace PyInterpreter.InterpreterBody.Visitors
 
         public void VisitGreaterExpr(GreaterExpr expr)
         {
-            _treeLevel += "_";
+            _treeLevel += "\\";
             var lvl = _treeLevel;
             Console.WriteLine("|" + _treeLevel + ">");
             expr._left.Accept(this);
@@ -172,7 +170,7 @@ namespace PyInterpreter.InterpreterBody.Visitors
 
         public void VisitLesserExpr(LesserExpr expr)
         {
-            _treeLevel += "_";
+            _treeLevel += "\\";
             var lvl = _treeLevel;
             Console.WriteLine("|" + _treeLevel + "<");
             expr._left.Accept(this);
@@ -182,7 +180,7 @@ namespace PyInterpreter.InterpreterBody.Visitors
 
         public void VisitGreaterEqualExpr(GreaterEqualExpr expr)
         {
-            _treeLevel += "_";
+            _treeLevel += "\\";
             var lvl = _treeLevel;
             Console.WriteLine("|" + _treeLevel + ">=");
             expr._left.Accept(this);
@@ -192,7 +190,7 @@ namespace PyInterpreter.InterpreterBody.Visitors
 
         public void VisitLesserEqualExpr(LesserEqualExpr expr)
         {
-            _treeLevel += "_";
+            _treeLevel += "\\";
             var lvl = _treeLevel;
             Console.WriteLine("|" + _treeLevel + "<=");
             expr._left.Accept(this);
@@ -206,7 +204,7 @@ namespace PyInterpreter.InterpreterBody.Visitors
 
         public void VisitIndexExpr(IndexExpr expr)
         {
-            _treeLevel += "_";
+            _treeLevel += "\\";
             var lvl = _treeLevel;
             Console.WriteLine("|" + _treeLevel + "Index");
             expr._list.Accept(this);
@@ -234,7 +232,7 @@ namespace PyInterpreter.InterpreterBody.Visitors
 
         public void VisitListExpr(ListExpr expr)
         {
-            _treeLevel += "_";
+            _treeLevel += "\\";
             var lvl = _treeLevel;
             Console.WriteLine("|" + _treeLevel + "list");
             foreach (var item in expr.items)
@@ -246,7 +244,7 @@ namespace PyInterpreter.InterpreterBody.Visitors
 
         public void VisitNumberExpr(LiteralExpr expr)
         {
-            _treeLevel += "_";
+            _treeLevel += "\\";
             var lvl = _treeLevel;
             Console.WriteLine("|" + _treeLevel + expr.Token.Value);
         }
@@ -257,7 +255,7 @@ namespace PyInterpreter.InterpreterBody.Visitors
 
         public void VisitMinusExpr(MinusExpr expr)
         {
-            _treeLevel += "_";
+            _treeLevel += "\\";
             var lvl = _treeLevel;
             Console.WriteLine("|" + _treeLevel + "-");
             expr._right.Accept(this);
@@ -265,7 +263,7 @@ namespace PyInterpreter.InterpreterBody.Visitors
 
         public void VisitPlusExpr(PlusExpr expr)
         {
-            _treeLevel += "_";
+            _treeLevel += "\\";
             var lvl = _treeLevel;
             Console.WriteLine("|" + _treeLevel + "+");
             expr._right.Accept(this);
@@ -274,7 +272,7 @@ namespace PyInterpreter.InterpreterBody.Visitors
         // TODO: BinExpr class.
         public void VisitAddExpr(AddExpr expr)
         {
-            _treeLevel += "_";
+            _treeLevel += "\\";
             var lvl = _treeLevel;
             Console.WriteLine("|" + _treeLevel + "+");
             expr._left.Accept(this);
@@ -284,7 +282,7 @@ namespace PyInterpreter.InterpreterBody.Visitors
 
         public void VisitSubExpr(SubExpr expr)
         {
-            _treeLevel += "_";
+            _treeLevel += "\\";
             var lvl = _treeLevel;
             Console.WriteLine("|" + _treeLevel + "-");
             expr._left.Accept(this);
@@ -294,7 +292,7 @@ namespace PyInterpreter.InterpreterBody.Visitors
 
         public void VisitMulExpr(MulExpr expr)
         {
-            _treeLevel += "_";
+            _treeLevel += "\\";
             var lvl = _treeLevel;
             Console.WriteLine("|" + _treeLevel + "*");
             expr._left.Accept(this);
@@ -304,7 +302,7 @@ namespace PyInterpreter.InterpreterBody.Visitors
 
         public void VisitDivExpr(DivExpr expr)
         {
-            _treeLevel += "_";
+            _treeLevel += "\\";
             var lvl = _treeLevel;
             Console.WriteLine("|" + _treeLevel + "/");
             expr._left.Accept(this);
@@ -314,7 +312,7 @@ namespace PyInterpreter.InterpreterBody.Visitors
 
         public void VisitVariableExpr(VariableExpr expr)
         {
-            _treeLevel += "_";
+            _treeLevel += "\\";
             var lvl = _treeLevel;
             string varName = expr.Eval().Value;
             Console.WriteLine("|" + _treeLevel + varName);
@@ -322,7 +320,7 @@ namespace PyInterpreter.InterpreterBody.Visitors
 
         public void VisitAssignExpr(AssignExpr expr)
         {
-            _treeLevel += "_";
+            _treeLevel += "\\";
             var lvl = _treeLevel;
             Console.WriteLine("|" + _treeLevel + "=");
             

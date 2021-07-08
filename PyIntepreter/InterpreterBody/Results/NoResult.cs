@@ -8,6 +8,7 @@ namespace PyInterpreter.InterpreterBody.Results
     {
         public NoResult()
         {
+            _pythonTypeName = "NoneType";
             Value = "None";
         }
 

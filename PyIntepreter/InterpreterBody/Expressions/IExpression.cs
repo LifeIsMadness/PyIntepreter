@@ -8,7 +8,7 @@ namespace PyInterpreter.InterpreterBody.Expressions
 {
     public interface IExpression
     {
-        public int LineNumber { get; set; }
+        //public int LineNumber { get; set; }
 
         void Accept(IVisitor expressionVisitor);
     }

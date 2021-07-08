@@ -10,21 +10,37 @@ namespace PyInterpreter.InterpreterBody.Visitors
 {
     public class ExpressionVisitor: IVisitor
     {
+        private void TypeError(string op, int line)
+        {
+            throw new Exception($"TypeError: Unsupported operand type(s) for {op} at line: {line + 1}");
+        }
+
+        private void Error(string msg, int line)
+        {
+            throw new Exception($"{msg} at line: {line + 1}");
+        }
 
         public void VisitAndExpr(AndExpr expr)
         {
             expr.Left.Accept(this);
             var left = Result;
-            if (left.Value == false)
+            try
             {
-                Result = expr.Eval(left);
-            }
-            else
-            {
-                expr.Right.Accept(this);
-                var right = Result;
+                if (left.Value == false)
+                {
 
-                Result = expr.Eval(left, right);
+                    Result = expr.Eval(left);
+                }
+                else
+                {
+                    expr.Right.Accept(this);
+                    var right = Result;
+                    Result = expr.Eval(left, right);
+                }
+            }
+            catch (Exception)
+            {
+                Error("Cannot treat list as Boolean", expr.LineNumber);
             }
         }
 
@@ -34,8 +50,14 @@ namespace PyInterpreter.InterpreterBody.Visitors
             var left = Result;
             expr.Right.Accept(this);
             var right = Result;
-
-            Result = expr.Eval(left, right);
+            try
+            {
+                Result = expr.Eval(left, right);
+            }
+            catch (Exception)
+            {
+                TypeError("or", expr.LineNumber);
+            }
         }
 
         public SymbolTable SymbolTable { get; set; }
@@ -48,27 +70,62 @@ namespace PyInterpreter.InterpreterBody.Visitors
         // Visit builtin functions.
         public void VisitInputExpr(InputFunctionExpr expr)
         {
-            Result = expr.Eval();
+            try
+            {
+                Result = expr.Eval();
+            }
+            catch (Exception ex)
+            {
+                Error(ex.Message, expr.LineNumber);
+            }
         }
 
         public void VisitPrintExpr(PrintFunctionExpr expr)
         {
-            Result = expr.Eval();
+            try
+            {
+                Result = expr.Eval();
+            }
+            catch (Exception ex)
+            {
+                Error(ex.Message, expr.LineNumber);
+            }
         }
 
         public void VisitRangeExpr(RangeFunctionExpr expr)
         {
-            Result = expr.Eval();
+            try
+            {
+                Result = expr.Eval();
+            }
+            catch (Exception ex)
+            {
+                Error(ex.Message, expr.LineNumber);
+            }
         }
 
         public void VisitIntExpr(IntFunctionExpr expr)
         {
-            Result = expr.Eval();
+            try
+            {
+                Result = expr.Eval();
+            }
+            catch (Exception ex)
+            {
+                Error(ex.Message, expr.LineNumber);
+            }
         }
 
         public void VisitLenExpr(LenFunctionExpr expr)
         {
-            Result = expr.Eval();
+            try
+            {
+                Result = expr.Eval();
+            }
+            catch(Exception ex)
+            {
+                Error(ex.Message, expr.LineNumber);
+            }
         }
         /////////////////////////////////////////////
 
@@ -79,14 +136,29 @@ namespace PyInterpreter.InterpreterBody.Visitors
             expr._right.Accept(this);
             var right = Result;
 
-            Result = expr.Eval(left, right);
+            try
+            {
+                Result = expr.Eval(left, right);
+            }
+            catch (Exception)
+            {
+                TypeError("==", expr.LineNumber);
+            }
         }
 
         public void VisitFunctionExpr(FunctionExpr expr)
         {
-            // TODO: if not callable
-            var name = ((VariableExpr)expr.Name).Eval().Value;
-            
+            string name = string.Empty;
+            try
+            {
+                name = ((VariableExpr)expr.Name).Eval().Value;
+            }
+            catch (Exception)
+            {
+                expr.Name.Accept(this);
+                Error($"'{Result.PythonTypeName}' object is not callable", expr.LineNumber);
+            }
+
             List<IResult> args = new List<IResult>();
             foreach (var arg in expr.Args)
             {
@@ -99,7 +171,7 @@ namespace PyInterpreter.InterpreterBody.Visitors
                 func.Args = args;
                 func.Accept(this);
             }
-            else throw new Exception("No such function");
+            else Error($"No such function '{name}'", expr.LineNumber);
         }
 
         public void VisitWhileExpr(WhileExpr expr)
@@ -159,7 +231,14 @@ namespace PyInterpreter.InterpreterBody.Visitors
             expr._right.Accept(this);
             var right = Result;
 
-            Result = expr.Eval(left, right);
+            try
+            {
+                Result = expr.Eval(left, right);
+            }
+            catch (Exception)
+            {
+                TypeError("!=", expr.LineNumber);
+            }
         }
 
         public void VisitGreaterExpr(GreaterExpr expr)
@@ -168,8 +247,14 @@ namespace PyInterpreter.InterpreterBody.Visitors
             var left = Result;
             expr._right.Accept(this);
             var right = Result;
-
-            Result = expr.Eval(left, right);
+            try
+            {
+                Result = expr.Eval(left, right);
+            }
+            catch (Exception)
+            {
+                TypeError(">", expr.LineNumber);
+            }
         }
 
         public void VisitLesserExpr(LesserExpr expr)
@@ -179,7 +264,14 @@ namespace PyInterpreter.InterpreterBody.Visitors
             expr._right.Accept(this);
             var right = Result;
 
-            Result = expr.Eval(left, right);
+            try
+            {
+                Result = expr.Eval(left, right);
+            }
+            catch (Exception)
+            {
+                TypeError("<", expr.LineNumber);
+            }
         }
 
         public void VisitGreaterEqualExpr(GreaterEqualExpr expr)
@@ -189,7 +281,14 @@ namespace PyInterpreter.InterpreterBody.Visitors
             expr._right.Accept(this);
             var right = Result;
 
-            Result = expr.Eval(left, right);
+            try
+            {
+                Result = expr.Eval(left, right);
+            }
+            catch (Exception)
+            {
+                TypeError(">=", expr.LineNumber);
+            }
         }
 
         public void VisitLesserEqualExpr(LesserEqualExpr expr)
@@ -199,7 +298,14 @@ namespace PyInterpreter.InterpreterBody.Visitors
             expr._right.Accept(this);
             var right = Result;
 
-            Result = expr.Eval(left, right);
+            try
+            {
+                Result = expr.Eval(left, right);
+            }
+            catch (Exception)
+            {
+                TypeError("<=", expr.LineNumber);
+            }
         }
 
         public ExpressionVisitor()
@@ -241,30 +347,65 @@ namespace PyInterpreter.InterpreterBody.Visitors
                 items.Add(Result);
             }
 
-            Result = expr.Eval(items);
+            try
+            {
+                Result = expr.Eval(items);
+            }
+            catch (Exception ex)
+            {
+                Error(ex.Message, expr.LineNumber);
+            }
 
         }
 
         public void VisitNumberExpr(LiteralExpr expr)
         {
-            Result = expr.Eval();
+            try
+            {
+                Result = expr.Eval();
+            }
+            catch (Exception ex)
+            {
+                Error(ex.Message, expr.LineNumber);
+            }
         }
 
         public void VisitEmptyExpr(EmptyExpr expr)
         {
-            Result = expr.Eval();
+            try
+            {
+                Result = expr.Eval();
+            }
+            catch (Exception ex)
+            {
+                Error(ex.Message, expr.LineNumber);
+            }
         }
 
         public void VisitMinusExpr(MinusExpr expr)
         {
             expr._right.Accept(this);
-            Result = expr.Eval(Result);
+            try
+            {
+                Result = expr.Eval(Result);
+            }
+            catch (Exception ex)
+            {
+                Error(ex.Message, expr.LineNumber);
+            }
         }
 
         public void VisitPlusExpr(PlusExpr expr)
         {
             expr._right.Accept(this);
-            Result = expr.Eval(Result);
+            try
+            {
+                Result = expr.Eval(Result);
+            }
+            catch (Exception ex)
+            {
+                Error(ex.Message, expr.LineNumber);
+            }
         }
 
         // TODO: BinExpr class.
@@ -273,7 +414,14 @@ namespace PyInterpreter.InterpreterBody.Visitors
             expr._left.Accept(this);
             var left = Result;
             expr._right.Accept(this);
-            Result = expr.Eval(left, Result);
+            try
+            {
+                Result = expr.Eval(left, Result);
+            }
+            catch (Exception ex)
+            {
+                Error(ex.Message, expr.LineNumber);
+            }
         }
 
         public void VisitSubExpr(SubExpr expr)
@@ -281,7 +429,14 @@ namespace PyInterpreter.InterpreterBody.Visitors
             expr._left.Accept(this);
             var left = Result;
             expr._right.Accept(this);
-            Result = expr.Eval(left, Result);
+            try
+            {
+                Result = expr.Eval(left, Result);
+            }
+            catch (Exception ex)
+            {
+                Error(ex.Message, expr.LineNumber);
+            }
         }
 
         public void VisitMulExpr(MulExpr expr)
@@ -289,7 +444,14 @@ namespace PyInterpreter.InterpreterBody.Visitors
             expr._left.Accept(this);
             var left = Result;
             expr._right.Accept(this);
-            Result = expr.Eval(left, Result);
+            try
+            {
+                Result = expr.Eval(left, Result);
+            }
+            catch (Exception ex)
+            {
+                Error(ex.Message, expr.LineNumber);
+            }
         }
 
         public void VisitDivExpr(DivExpr expr)
@@ -297,7 +459,14 @@ namespace PyInterpreter.InterpreterBody.Visitors
             expr._left.Accept(this);
             var left = Result;
             expr._right.Accept(this);
-            Result = expr.Eval(left, Result);
+            try
+            {
+                Result = expr.Eval(left, Result);
+            }
+            catch (Exception ex)
+            {
+                Error(ex.Message, expr.LineNumber);
+            }
         }
 
         public void VisitVariableExpr(VariableExpr expr)
@@ -309,7 +478,7 @@ namespace PyInterpreter.InterpreterBody.Visitors
             }
             catch (Exception ex)
             {
-                throw new Exception($"Name {varName} is not defined");
+                Error($"Name {varName} is not defined", expr.LineNumber);
             }
         }
 

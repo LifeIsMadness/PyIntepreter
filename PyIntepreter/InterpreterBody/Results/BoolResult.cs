@@ -9,6 +9,7 @@ namespace PyInterpreter.InterpreterBody.Results
     {
         public BoolResult(bool value) : base(value)
         {
+            _pythonTypeName = "bool";
         }
 
         public override IResult Add(IResult right)

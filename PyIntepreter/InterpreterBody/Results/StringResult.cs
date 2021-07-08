@@ -8,6 +8,7 @@ namespace PyInterpreter.InterpreterBody.Results
     {
         public StringResult(string value) : base(value)
         {
+            _pythonTypeName = "str";
         }
 
         //private BoolResult ParseComparisonValue(int value)

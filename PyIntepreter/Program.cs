@@ -8,17 +8,6 @@ using System.IO;
 
 namespace PyInterpreter
 {
-
-    class A
-    {
-        public static A operator +(A a, A b) => new A();
-    }
-
-    class B
-    {
-        public static B operator +(B a, B b) => new B();
-    }
-
     class Program
     {   
         static void PrintTable(Interpreter interpreter)
@@ -86,12 +75,12 @@ namespace PyInterpreter
             //    }
             //}
             
-            string fileName = "input.txt";
+            string fileName = "input1" +
+                ".txt";
             string text = File.ReadAllText(fileName);
 
             try
             {
-                //string text = "for i in range(10):\n\tprint(i)";
                 Console.WriteLine($"Program text: \n{text}");
                 Console.WriteLine("-----------------------");
                 var scanner = new Tokenizer(text);
@@ -100,6 +89,7 @@ namespace PyInterpreter
 
                 var result = interpreter.Interpret();
 
+                // also TreeDrawingVisitor and lexem table are disabled
                 //PrintTable(interpreter);
             }
             catch (Exception ex)

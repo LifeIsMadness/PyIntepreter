@@ -4,18 +4,26 @@ using System.Text;
 
 namespace PyInterpreter.InterpreterBody.Results
 {
-    public class Result: IResult
+    public abstract class Result: IResult
     {
         // python lexem;
         //protected string _rawValue = string.Empty;
 
         //protected dynamic _value;
+        protected string _pythonTypeName;
+
+        public string PythonTypeName { get => _pythonTypeName; }
 
         public dynamic Value { get; set; }
 
         public Result() { }
 
         public Result(dynamic value) => Value = value;
+
+        protected virtual void Error(string op)
+        {
+            throw new Exception($"TypeError: Unsupported operand type(s) for '{op}'");
+        }
 
         //public Result(string value)
         //{

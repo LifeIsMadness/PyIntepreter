@@ -53,8 +53,8 @@ namespace PyInterpreter.InterpreterBody
         {
             var program = _parser.Parse();
            
-            Console.WriteLine("Tree image:");
-            program.Accept(treeDrawingVisitor);
+            //Console.WriteLine("Tree image:");
+            //program.Accept(treeDrawingVisitor);
 
             Console.WriteLine("Program result:");
             program.Accept(exprVisitor);

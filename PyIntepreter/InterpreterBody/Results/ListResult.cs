@@ -8,6 +8,7 @@ namespace PyInterpreter.InterpreterBody.Results
     {
         public ListResult(IList<IResult> results): base(results)
         {
+            _pythonTypeName = "list";
             //Value = results;
         }
 
